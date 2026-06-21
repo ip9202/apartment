@@ -1,0 +1,7 @@
+{
+  "detected": true,
+  "matched_keywords": ["postgresql", "prisma", "railway"],
+  "source_files": [".moai/project/tech.md"],
+  "scanned_at": "2026-06-21T10:33:00Z",
+  "tech_md_hash": "d8d22b1c76a44f92afd9a562eff16b6b9ae563ce72bda769f2d9ca23b3edf491"
+}

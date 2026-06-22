@@ -7,6 +7,7 @@
 - ✅ **AUTH P0 완료** (SPEC-AUTH-001): 회원가입·로그인·동/호수 인증·강제 탈퇴 (2026-06-20)
 - ✅ **SETUP P0 완료** (SPEC-SETUP-001): 동/호수/직책/회원 관리 (2026-06-22)
 - ✅ **NOTICE P0 완료** (SPEC-NOTICE-001): 공지사항 등록/수정/삭제/열람 (2026-06-22)
+- ✅ **SUGGEST P0 완료** (SPEC-SUGGEST-001): 건의/문의 등록/수정/아카이브/열람/답변/상태/호수이력 (2026-06-22)
 
 ## 프로젝트 문서
 
@@ -44,3 +45,13 @@
 - `GET /api/notices/[id]` - 공지 상세 (인증 사용자)
 - `PUT /api/notices/[id]` - 공지 수정 (ADMIN)
 - `DELETE /api/notices/[id]` - 공지 삭제 (ADMIN, 영구 삭제)
+
+### 건의/문의 (SUGGEST)
+- `GET /api/suggestions` - 건의 목록 (인증 사용자, 역할별 비공개 분기 + 필터 + 페이지네이션)
+- `POST /api/suggestions` - 건의 등록 (RESIDENT/REP/AUDITOR/CHAIR, ADMIN 제외)
+- `GET /api/suggestions/[id]` - 건의 상세 (인증 사용자, 비공개 시 권한 검사)
+- `PUT /api/suggestions/[id]` - 건의 수정 (작성자 본인, archived/완료 상태 수정 불가)
+- `DELETE /api/suggestions/[id]` - 건의 아카이브 (작성자 본인 또는 ADMIN, 익명화 전환)
+- `POST /api/suggestions/[id]/replies` - 답변 등록 (ADMIN)
+- `PUT /api/suggestions/[id]/status` - 상태 변경 (ADMIN, 화이트리스트 전이 검증)
+- `GET /api/suggestions/units/[building]/[unit]` - 호수별 건의 이력 (ADMIN/CHAIR, 아카이브 포함)

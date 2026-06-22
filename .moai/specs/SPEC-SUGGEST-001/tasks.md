@@ -7,7 +7,7 @@ SPEC: SPEC-SUGGEST-001
 | Task ID | Description | Requirement | Dependencies | Planned Files | Status |
 |---------|-------------|-------------|--------------|---------------|--------|
 | T-SUGGEST-A | M8b suggestion_categories 시드 + suggestions ALTER + suggestion_replies 마이그레이션 | REQ-038,039,040, AC-001,002,003,004 | - | migrations/007_suggestions_expand.sql, src/lib/migration-007.test.ts | pending |
-| T-SUGGEST-B | M1 건의 등록 + M4 건의 목록 열람 (역할별 분기) | REQ-001~005,018~022, AC-005~009,024~029 | T-SUGGEST-A | src/app/api/suggestions/route.ts, src/app/api/suggestions/route.test.ts, src/lib/rbac.ts (requireAuthenticated 추가) | pending |
+| T-SUGGEST-B | M1 건의 등록 + M4 건의 목록 열람 (역할별 분기) + SUGGEST 도메인 requireAuthenticated 헬퍼 | REQ-001~005,018~022, AC-005~009,024~029 | T-SUGGEST-A | src/lib/suggest-rbac.ts (신규, requireAuthenticated 헬퍼 — 공유 rbac.ts 수정 없음), src/app/api/suggestions/route.ts, src/app/api/suggestions/route.test.ts | pending |
 | T-SUGGEST-C | M5 건의 상세 열람 (권한 검사) | REQ-023~026, AC-030~034 | T-SUGGEST-B | src/app/api/suggestions/[id]/route.ts (GET), src/app/api/suggestions/[id]/route.test.ts (GET) | pending |
 | T-SUGGEST-D | M2 건의 수정 (작성자 본인, archived/완료 409) | REQ-006~011, AC-010~017 | T-SUGGEST-C | src/app/api/suggestions/[id]/route.ts (PUT 추가), src/app/api/suggestions/[id]/route.test.ts (PUT 추가) | pending |
 | T-SUGGEST-E | M3 건의 아카이브 (작성자/ADMIN, 익명화, unit_id 보존) | REQ-012~017, AC-018~023, EC-006 | T-SUGGEST-D | src/app/api/suggestions/[id]/route.ts (DELETE 추가), src/app/api/suggestions/[id]/route.test.ts (DELETE 추가) | pending |
@@ -19,8 +19,11 @@ SPEC: SPEC-SUGGEST-001
 ## 재사용 파일 (AUTH/SETUP/NOTICE 소유, 수정 없음)
 - src/lib/db.ts (query)
 - src/lib/auth.ts (verifyAccessToken)
-- src/lib/rbac.ts (requireAdmin, requirePrivileged, unauthorized, forbidden, badRequest, notFound, conflict, validationError) — 단, T-SUGGEST-B에서 requireAuthenticated 헬퍼 추가 (역할 분기용, 기존 패턴 준거)
+- src/lib/rbac.ts (requireAdmin, requirePrivileged, unauthorized, forbidden, badRequest, notFound, conflict, validationError) — **수정 없음** (공유 파일, Scope Discipline 준거)
 - src/middleware.ts (수정 불필요 — /api/suggestions는 기존 matcher로 인증 적용, 공개 엔드포인트 아님)
+
+## 신규 파일 (SUGGEST 소유)
+- src/lib/suggest-rbac.ts — requireAuthenticated 헬퍼 (Bearer→verify→ACTIVE 조회, {callerId, callerRole, unitId, managedBuildingId} 반환). M1/M4/M5 공유 (fan_in=3). NOTICE 의 로컬 requireAuth 인라인 패턴을 별도 파일로 추출한 것 — 공유 rbac.ts 를 건드리지 않아 기존 333 테스트 회귀 리스크 제로.
 
 ## 정책 결정 (Plan Review 확정)
 1. P0 범위: SUGGEST-01~12 전체. SUGGEST-13(카테고리 CRUD)/첨부파일/영구삭제/답변 수정·삭제/검색/알림은 OUT.

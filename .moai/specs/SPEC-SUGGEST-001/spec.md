@@ -389,4 +389,69 @@ Run Phase에서 다음 @MX 태그를 적용한다:
 
 ---
 
+## Implementation Notes
+
+**구현 완료일**: 2026-06-22
+**상태**: ✅ 완료 (P0), develop 브랜치에 병합됨 (커밋 0d90dd1)
+**테스트 커버리지**: 412/412 통과 (SUGGEST route 93.07%)
+
+### 생성 파일
+
+| 파일 | 모듈 | 목적 |
+|------|------|------|
+| `migrations/007_suggestions_expand.sql` | M8b | suggestion_categories 시드(시설/주차/소음/기타) + suggestions ALTER(7컬럼) + suggestion_replies 신규 테이블 |
+| `src/lib/suggest-rbac.ts` | M1/M4/M5 | SUGGEST 도메인 인증 헬퍼 (requireAuthenticated, Option C — rbac.ts 무변경) |
+| `src/app/api/suggestions/route.ts` | M1/M4 | GET 목록(역할별 비공개 분기 + 필터 + 페이지네이션) + POST 등록(ADMIN 403) |
+| `src/app/api/suggestions/[id]/route.ts` | M2/M3/M5 | GET 상세(비공개 403) + PUT 수정(작성자 본인) + DELETE 아카이브(익명화) |
+| `src/app/api/suggestions/[id]/replies/route.ts` | M6 | POST 답변 등록(ADMIN) |
+| `src/app/api/suggestions/[id]/status/route.ts` | M7 | PUT 상태 변경(ADMIN, 화이트리스트 전이 검증) |
+| `src/app/api/suggestions/units/[building]/[unit]/route.ts` | M8a | GET 호수별 이력(ADMIN/CHAIR, 아카이브 포함) |
+| `src/lib/migration-007.test.ts` | M8b | migration 007 검증 (14 tests, R1 CRITICAL AUTH deactivate 호환성) |
+| `src/app/api/suggestions/route.test.ts` | M1/M4 | 목록/등록 검증 (18 tests) |
+| `src/app/api/suggestions/[id]/route.test.ts` | M2/M3/M5 | 상세/수정/아카이브 검증 (30 tests) |
+| `src/app/api/suggestions/[id]/replies/route.test.ts` | M6 | 답변 등록 검증 (7 tests) |
+| `src/app/api/suggestions/[id]/status/route.test.ts` | M7 | 상태 변경 검증 (10 tests) |
+| `src/app/api/suggestions/units/[building]/[unit]/route.test.ts` | M8a | 호수별 이력 검증 (8 tests) |
+
+### 수정 파일
+
+| 파일 | 수정 내용 |
+|------|-----------|
+| 없음 | Option C — rbac.ts 무변경, suggest-rbac.ts 신규 생성 (AUTH/SETUP/NOTICE 333 테스트 회귀 방지) |
+
+### 핵심 구현 결정
+
+1. **route-level Bearer 강제** (REQ-SUGGEST-020, 026, 029a, 034a, 037a): middleware.ts는 AT 쿠키(Edge/jose)만 검사하고 Authorization 헤더를 검사하지 않는다. requireAuthenticated() (suggest-rbac.ts)로 Bearer→verifyAccessToken→ACTIVE 조회 후 {callerId, callerRole, unitId, managedBuildingId} 반환 (NOTICE requireAuth 패턴 확장, fan_in=3 — M1 등록, M4 목록, M5 상세).
+2. **역할별 비공개 분기** (REQ-SUGGEST-018, 021, 022): M4 목록 / M5 상세에서 서버 사이드 자동 필터링 — RESIDENT/AUDITOR 본인(author_id == callerId), REP 담당동(managed_building_id == 건의 building), CHAIR/ADMIN 전체. 무권한 비공개 접근 시 403(404 아님, 존재 누출 방지).
+3. **아카이브 익명화(ADR-005)** (REQ-SUGGEST-012, 013): DELETE = archived=true + author_id=NULL + author_label='전 입주민' + archived_at=now 전환. unit_id는 영구 보존(호수 이력 추적). 행 삭제(hard delete) 금지.
+4. **상태 전이 화이트리스트** (REQ-SUGGEST-031): 접수→{처리중,보류}, 처리중→{완료,보류}, 보류→{처리중,접수}, 완료→접수(재오픈). 불허 전이(접수→완료 스킵 등)는 409 반환.
+5. **카테고리 시드 멱등성** (REQ-SUGGEST-038): suggestion_categories.name UNIQUE + ON CONFLICT (name) DO NOTHING (NOTICE 006 패턴 동일). 4종(시설/주차/소음/기타) 고정 시드.
+6. **Option C (rbac.ts 무변경)**: suggest-rbac.ts 별도 파일 생성. requireAuthenticated()가 역할/호수/담당동를 반환 (rbac.ts requireAdmin/requirePrivileged 무변경, AUTH/SETUP/NOTICE 333 테스트 회귀 방지).
+
+### 알려진 제한사항
+
+1. **첨부파일(attachments) 미구현**: 본 SPEC 범위 완전 제외 — 파일 저장소 백엔드(S3/Railway Volumes/Supabase Storage 등) 결정 후 별도 ADR/SPEC 필요 (Exclusions #1).
+2. **SUGGEST-13 카테고리 동적 CRUD 미구현**: 4종(시설/주차/소음/기타) 고정 시드, name UNIQUE로 멱등성 보장. 동적 카테고리 추가/수정/삭제는 P1 별도 SPEC 필요 (Exclusions #2).
+3. **건의 영구 삭제(hard delete) 금지**: ADR-005 호수 귀속 정책 준거 — DELETE = archive semantics (익명화 전환). 행 삭제 금지 (Exclusions #3).
+4. **건의 답변 수정/삭제 미구현**: 본 SPEC은 답변 등록(POST)만 지원. 답변 수정(PUT)과 답변 삭제(DELETE)는 범위 외 (Exclusions #5).
+5. **건의 검색(전문 검색) 미구현**: 제목/내용 키워드 검색은 본 SPEC 범위 아님. category_id/status/is_public/unit_id 필터만 지원 (Exclusions #4).
+6. **AUDITOR 건의 권한**: apt_08 §7 매트릭스 미명시 → RESIDENT 동일 취급(공개+본인비공개 열람, 등록 가능). 후속 보안 정책 명시 권장 (progress.md Known limitations 참조).
+7. **상태 변경 reason 필드**: 현재 로그 전용(테이블 컬럼 없음). status_history 테이블 도입 시 별도 SPEC.
+
+### 품질 검증 결과
+
+- **테스트**: 412/412 통과 (기존 333 + 신규 79: migration 14, route 65)
+- **타입**: `tsc --noEmit` 0 에러
+- **린트**: ESLint 0 경고 (기존 2개 pre-existing warning 유지)
+- **보안**: OWASP CLEAN (RBAC/SQL Injection/UUID 검증/Parameterized Query 전부 코드 레벨 확인)
+- **커버리지**: SUGGEST route 93.07% lines (임계 85% 충족)
+
+### 의존성
+
+- **SPEC-AUTH-001 P0**: `users`/`roles`/`buildings`/`units` 스키마 및 `src/lib` (db, auth, rbac) 재사용. AUTH 강제 탈퇴(AUTH-07) 사이드이펙트 로직(deactivate/route.ts:131-136)는 migration 007 ALTER 후에도 동일 UPDATE로 정상 동작(R1 CRITICAL — migration-007.test.ts 단정 포함).
+- **SPEC-SETUP-001 P0**: RBAC 헬퍼(rbac.ts requireAdmin/requirePrivileged, 응답 빌더) 재사용. REP의 managed_building_id 단일 출처(M5 제거)를 M4 비공개 담당동 필터링에 활용.
+- **SPEC-NOTICE-001 P0**: notice_categories 시드 패턴(migration 006)과 route-level Bearer 인증 패턴(verify-unit/route.ts:46-63) 참조.
+
+---
+
 *본 SPEC의 SUGGEST routes는 greenfield(미구현)이므로 Delta 마커 없이 작성되었다. 단, migration 007(suggestions ALTER + categories + replies)은 기존 004 suggestions 테이블(brownfield, AUTH 소유)을 수정하며, AUTH 강제 탈퇴 사이드이펙트 로직(`deactivate` route)의 호환성을 유지해야 한다 — 기존 004 컬럼(id, author_id, author_label, archived, unit_id, created_at)은 보존되고 ALTER ADD로 7개 컬럼만 추가된다.*

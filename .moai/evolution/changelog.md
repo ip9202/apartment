@@ -8,6 +8,69 @@ Each entry: date, learning ID, skill affected, change summary.
 
 ---
 
+## [2026-06-22] SPEC-SUGGEST-001 P0 완료 — 건의/문의 (등록/수정/아카이브/열람/답변/상태/호수이력)
+
+### 개요
+SUGGEST 도메인 P0 전체 범위 완성. develop 브랜치에 squash-merge 완료 (커밋 0d90dd1).
+
+### 구현 엔드포인트 (8개)
+1. **GET /api/suggestions** (인증 사용자) — 건의 목록 조회, 역할별 비공개 분기(RESIDENT 본인 / REP 담당동 / CHAIR·ADMIN 전체) + is_public/status/category_id/unit_id 필터 + 페이지네이션 (REQ-SUGGEST-018)
+2. **POST /api/suggestions** (RESIDENT/REP/AUDITOR/CHAIR) — 건의 등록, 201/422(category_id 미존재)/403(ADMIN 제외, unit_id NULL) (REQ-SUGGEST-001~005)
+3. **GET /api/suggestions/[id]** (인증 사용자) — 건의 상세 조회, 비공개 시 권한 검사(403) (REQ-SUGGEST-023~026)
+4. **PUT /api/suggestions/[id]** (작성자 본인) — 건의 수정, 409(archived/완료 상태) (REQ-SUGGEST-006~011)
+5. **DELETE /api/suggestions/[id]** (작성자 본인 OR ADMIN) — 건의 아카이브(익명화), 409(이미 archived) (REQ-SUGGEST-012~017)
+6. **POST /api/suggestions/[id]/replies** (ADMIN) — 답변 등록, 201/404 (REQ-SUGGEST-027~029b)
+7. **PUT /api/suggestions/[id]/status** (ADMIN) — 상태 변경, 화이트리스트 전이 검증, 409(불가능 전이) (REQ-SUGGEST-030~034b)
+8. **GET /api/suggestions/units/[building]/[unit]** (ADMIN/CHAIR) — 호수별 건의 이력, 아카이브/비공개 포함 created_at ASC (REQ-SUGGEST-035~037b)
+
+### 핵심 설계 결정
+- **route-level Bearer 강제**: middleware.ts는 AT 쿠키만 검사, requireAuthenticated() (suggest-rbac.ts)가 Bearer→verifyAccessToken→역할/호수/담당동 반환 (NOTICE requireAuth 패턴 확장, fan_in=3)
+- **역할별 비공개 분기**: M4 목록 / M5 상세에서 서버 자동 필터링 — RESIDENT 본인 / REP 담당동(managed_building_id 매칭) / CHAIR·ADMIN 전체 (REQ-SUGGEST-018)
+- **아카이브 익명화(ADR-005)**: DELETE = archived=true + author_id=NULL + author_label='전 입주민', unit_id 영구 보존 (REQ-SUGGEST-012)
+- **상태 전이 화이트리스트**: 접수→{처리중,보류}, 처리중→{완료,보류}, 보류→{처리중,접수}, 완료→접수(재오픈). 불허 전이 409 (REQ-SUGGEST-031)
+- **카테고리 시드 멱등성**: suggestion_categories.name UNIQUE + ON CONFLICT (name) DO NOTHING (NOTICE 006 패턴 동일)
+- **Option C (rbac.ts 무변경)**: suggest-rbac.ts 별도 파일 생성. requireAuthenticated()로 역할/호수/담당동 반환 (AUTH/SETUP/NOTICE 333 테스트 회귀 방지)
+
+### 품질 검증 결과
+- **테스트**: 412/412 통과 (기존 333 + 신규 79: migration 14, route 65)
+- **타입**: `tsc --noEmit` 0 에러
+- **린트**: ESLint 0 경고 (기존 2개 warning 유지)
+- **보안**: OWASP CLEAN (RBAC/SQL Injection/UUID 검증/Parameterized Query 전부 코드 레벨 확인)
+- **커버리지**: SUGGEST route 93.07% lines (임계 85% 충족)
+
+### 알려진 제한사항 (후속 추적)
+1. **첨부파일(attachments) 미구현**: 본 SPEC 범위 완전 제외 — 파일 저장소 백엔드 결정 후 별도 ADR/SPEC 필요
+2. **SUGGEST-13 카테고리 동적 CRUD 미구현**: 4종(시설/주차/소음/기타) 고정 시드 — P1 별도 SPEC 필요
+3. **건의 영구 삭제(hard delete) 금지**: ADR-005 호수 귀속 정책 준거 — DELETE = archive semantics
+4. **건의 답변 수정/삭제 미구현**: 본 SPEC은 등록만, 수정/삭제는 별도 SPEC
+5. **건의 검색(전문 검색) 미구현**: 필터만 지원 — 본 SPEC 범위 외
+6. **AUDITOR 건의 권한**: RESIDENT 동일 취급(공개+본인비공개 열람, 등록 가능) — apt_08 §7 미명시, 후속 보안 정책 권장
+
+### 생성 파일
+- `migrations/007_suggestions_expand.sql` — M8b 스키마 (suggestion_categories 시드 + suggestions ALTER 7컬럼 + suggestion_replies 신규)
+- `src/lib/suggest-rbac.ts` — M1/M4/M5 공통 인증 헬퍼 (requireAuthenticated)
+- `src/app/api/suggestions/route.ts` — GET 목록(역할별 분기) + POST 등록(ADMIN 403)
+- `src/app/api/suggestions/[id]/route.ts` — GET 상세(비공개 403) + PUT 수정(본인) + DELETE 아카이브(익명화)
+- `src/app/api/suggestions/[id]/replies/route.ts` — POST 답변 등록(ADMIN)
+- `src/app/api/suggestions/[id]/status/route.ts` — PUT 상태 변경(ADMIN, 화이트리스트)
+- `src/app/api/suggestions/units/[building]/[unit]/route.ts` — GET 호수별 이력(ADMIN/CHAIR)
+- `src/lib/migration-007.test.ts` — M8b 마이그레이션 검증 (14 tests, R1 CRITICAL AUTH deactivate 호환성)
+- `src/app/api/suggestions/route.test.ts` — 목록/등록 검증 (18 tests)
+- `src/app/api/suggestions/[id]/route.test.ts` — 상세/수정/아카이브 검증 (30 tests)
+- `src/app/api/suggestions/[id]/replies/route.test.ts` — 답변 등록 검증 (7 tests)
+- `src/app/api/suggestions/[id]/status/route.test.ts` — 상태 변경 검증 (10 tests)
+- `src/app/api/suggestions/units/[building]/[unit]/route.test.ts` — 호수별 이력 검증 (8 tests)
+
+### 수정 파일
+- 없음 (Option C — rbac.ts 무변경, suggest-rbac.ts 신규 생성)
+
+### 의존성
+- **SPEC-AUTH-001 P0**: `users`/`roles`/`buildings`/`units` 스키마 및 `src/lib` (db, auth, rbac) 재사용
+- **SPEC-SETUP-001 P0**: RBAC 헬퍼(rbac.ts requireAdmin/requirePrivileged, 응답 빌더) 재사용
+- **SPEC-NOTICE-001 P0**: route-level Bearer 인증 패턴(verify-unit/route.ts:46-63) 참조
+
+---
+
 ## [2026-06-22] SPEC-NOTICE-001 P0 완료 — 공지사항 (등록/수정/삭제/열람)
 
 ### 개요

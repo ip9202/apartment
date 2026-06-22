@@ -63,7 +63,16 @@ CREATE INDEX IF NOT EXISTS idx_suggestion_replies_suggestion_id
 ```
 
 **TDD 주기**:
-- RED: `src/lib/migration-007.test.ts` 작성 (기존 5+1 migration 테스트 파일명 규칙 준거 — `src/lib/migration-00X.test.ts`, `migration-test-helpers.ts` 재사용). `beforeAll`에서 (1) suggestion_replies/suggestion_categories/suggestions 로컬 DROP, (2) `dropAllAuthTables` + `dropAllNoticeTables` 호출, (3) 001→007 순차 `applySql(readMigration(...))` 적용. 어설션: suggestion_categories 4종 시드 행 존재 / suggestions 컬럼 13종 존장(004 기존 6종 + 007 추가 7종, assertColumnsExist) / 인덱스 존재 / FK 존재 / suggestion_replies 컬럼 존재 / **기존 004 데이터 보존 검증**(001→004 적용 후 suggestions 행 INSERT → 007 적용 → 행 잔존 및 신규 컬럼 디폴트값 확인). → 실패
+- RED: `src/lib/migration-007.test.ts` 작성 (기존 5+1 migration 테스트 파일명 규칙 준거 — `src/lib/migration-00X.test.ts`, `migration-test-helpers.ts` 재사용). `beforeAll`에서 (1) suggestion_replies/suggestion_categories/suggestions 로컬 DROP, (2) `dropAllAuthTables` 호출 후 notices/notice_categories 로컬 DROP, (3) 001→007 순차 `applySql(readMigration(...))` 적용. 어설션:
+  - suggestion_categories 4종 시드 행 존재 (시설/주차/소음/기타, name UNIQUE)
+  - suggestions 컬럼 13종 존재 (004 기존 6종 + 007 추가 7종, assertColumnsExist)
+  - 인덱스 존재 (category_id, is_public, status, archived + 004 기존 unit_id, author_id 유지)
+  - FK 존재 (suggestions.category_id→suggestion_categories, suggestion_replies.suggestion_id→suggestions, suggestion_replies.author_id→users)
+  - suggestion_replies 컬럼 6종 존재
+  - **기존 004 데이터 보존 검증** (AC-SUGGEST-003): 001→004 적용 후 suggestions 행 INSERT(author_id 존재) → 005→007 추가 적용 → 행 잔존 + 기존 컬럼(id, author_id, author_label, archived, unit_id, created_at) 값 보존 + 신규 컬럼 디폴트값(category_id=NULL, title='', content='', is_public=false, status='접수', updated_at=NOT NULL, archived_at=NULL) 확인
+  - **AUTH deactivate UPDATE 호환성 검증 (최중요 — Phase 1 리스크 헌트 결과)**: 007 적용된 상태에서 deactivate route 와 동일한 UPDATE 실행 (`UPDATE suggestions SET author_id=NULL, author_label='전 입주민', archived=true WHERE author_id=$1`) → 에러 없음 + author_id=NULL + author_label='전 입주민' + archived=true + **unit_id 보존(변경 없음)** + 신규 컬럼(title/content/is_public/status/updated_at) 간섭 없음 확인. 이 어설션은 AUTH deactivate route(deactivate/route.ts:131-136) 가 migration 007 ALTER 후에도 정상 동작함을 보장하는 핵심 회귀 방어선이다.
+  - **멱등성**: 007 재적용 시 에러 없음 (ADD COLUMN IF NOT EXISTS + CREATE TABLE IF NOT EXISTS + ON CONFLICT DO NOTHING)
+  → 실패
 - GREEN: `migrations/007_suggestions_expand.sql` 적용 → 통과
 - REFACTOR: 불필요(단일 DDL + ALTER)
 
@@ -80,10 +89,10 @@ CREATE INDEX IF NOT EXISTS idx_suggestion_replies_suggestion_id
 **파일**:
 - `src/app/api/suggestions/route.ts` (신규 — `GET` 인증 + `POST` RESIDENT 이상)
 - `src/app/api/suggestions/route.test.ts` (신규)
-- `src/lib/rbac.ts` (수정 — `requireAuthenticated` 헬퍼 추가, {callerId, callerRole, managedBuildingId} 반환)
+- `src/lib/suggest-rbac.ts` (신규 — SUGGEST 도메인 로컬 `requireAuthenticated` 헬퍼. 공유 `rbac.ts` 수정 없음. NOTICE `requireAuth` 인라인 패턴의 확장 — 3개 라우트 GET list/M5 GET detail/M1 POST create 공유 필요로 별도 파일 추출. {callerId, callerRole, unitId, managedBuildingId} 반환. 상세는 §2 파일 목록 비고 참조)
 
 **구현 디테일**:
-- `GET /api/suggestions`: **route-level Bearer 인증 필수** (NOTICE GET 패턴 준거, `verify-unit/route.ts:46-63`). `requireAuthenticated` 호출 → {callerId, callerRole, managedBuildingId} 획득. 역할별 WHERE 절 분기:
+- `GET /api/suggestions`: **route-level Bearer 인증 필수** (NOTICE GET 패턴 준거, `verify-unit/route.ts:46-63`). `requireAuthenticated` (src/lib/suggest-rbac.ts) 호출 → {callerId, callerRole, managedBuildingId} 획득. 역할별 WHERE 절 분기 (단일 쿼리 + parameterized 조건 — 동적 SQL 문자열 결합 금지):
   - RESIDENT/AUDITOR: `is_public=true OR author_id=$callerId`
   - REP: `is_public=true OR author_id=$callerId OR (is_public=false AND unit.building_id=$managedBuildingId)`
   - CHAIR/ADMIN: 조건 없음(전체)
@@ -244,13 +253,14 @@ const ALLOWED_TRANSITIONS: Record<string, Set<string>> = {
 | `src/app/api/suggestions/[id]/replies/route.test.ts` | M6 | 테스트 |
 | `src/app/api/suggestions/[id]/status/route.test.ts` | M7 | 테스트 |
 | `src/app/api/suggestions/units/[building]/[unit]/route.test.ts` | M8a | 테스트 |
-| `src/lib/migration-007.test.ts` | M8b | migration 007 검증 테스트 (기존 `src/lib/migration-00X.test.ts` 규칙 준거, `migration-test-helpers.ts` 재사용, **004 데이터 보존 검증 포함**) |
+| `src/lib/migration-007.test.ts` | M8b | migration 007 검증 테스트 (기존 `src/lib/migration-00X.test.ts` 규칙 준거, `migration-test-helpers.ts` 재사용, **004 데이터 보존 검증 + AUTH deactivate UPDATE 호환성 검증 포함**) |
+| `src/lib/suggest-rbac.ts` | M1/M4/M5 | SUGGEST 도메인 로컬 `requireAuthenticated` 헬퍼 (신규). Bearer→verifyAccessToken→ACTIVE 조회 후 {callerId, callerRole, unitId, managedBuildingId} 반환. M4 목록 역할 분기 + M5 상세 권한 검사 + M1 등록(unit_id/ADMIN 403) 공유. fan_in=3 → @MX:ANCHOR 후보 |
 
 ### 수정 파일
 
-| 파일 | 수정 내용 |
-|------|-----------|
-| `src/lib/rbac.ts` | `requireAuthenticated` 헬퍼 추가 — {callerId, callerRole, managedBuildingId} 반환. 기존 requireAdmin/requirePrivileged 패턴 준거, Bearer→verify→ACTIVE 흐름 동일. SUGGEST 역할 분기(M4/M5)용. 단, `managed_building_id`는 REP만 보유(비-REP는 undefined). |
+**없음.** 공유 파일(`src/lib/rbac.ts`, `src/middleware.ts`, AUTH/SETUP/NOTICE 산출물)은 일체 수정하지 않는다 (Maintain Scope Discipline 준거). SUGGEST 역할 분기용 헬퍼는 `src/lib/suggest-rbac.ts` 신규 파일로 격리한다.
+
+> **rbac.ts 결정 근거 (Phase 1 검증 완료)**: plan.md 초안은 `requireAuthenticated` 를 공유 `src/lib/rbac.ts` 에 추가하려 했으나, Phase 1 검증에서 **Option C (SUGGEST 도메인 로컬 신규 파일)** 로 변경했다. 근거: (1) NOTICE 가 이미 동일 접근(로컬 requireAuth 인라인, rbac.ts 수정 없음)으로 선례 확립. (2) rbac.ts 는 AUTH/SETUP 소유 공유 파일 — 333개 기존 테스트 회귀 리스크 최소화. (3) SUGGEST 역할 분기(RESIDENT 본인 / REP 담당동 / CHAIR·ADMIN 전체)는 SUGGEST 고유 비즈니스 로직이므로 SUGGEST 도메인이 소유하는 것이 응집도 높음. (4) fan_in=3(M1/M4/M5) 이므로 별도 파일 추출이 DRY 원칙 부합. ParkING 등 향후 도메인이 유사 분기를 필요시 별도 헬퍼 작성(도메인 격리 유지).
 
 ### 재사용 파일 (AUTH/SETUP/NOTICE 소유, 수정 없음)
 
@@ -266,8 +276,9 @@ const ALLOWED_TRANSITIONS: Record<string, Set<string>> = {
 
 | 리스크 | 설명 | 완화 방안 |
 |--------|------|-----------|
-| **ALTER 중 데이터 손실** | 기존 004 suggestions 데이터가 ALTER 중 손실 | `ADD COLUMN IF NOT EXISTS` 사용, 기존 컬럼/데이터 보존. migration-007.test.ts에서 004 데이터 보존 검증(Phase A RED) |
-| **AUTH deactivate 호환성 깨짐** | AUTH route가 갱신하는 author_id/author_label/archived 컬럼이 ALTER 후에도 존재/동작해야 | 기존 004 컬럼 보존(ALTER ADD만), AUTH deactivate route는 신규 컬럼(title/content/is_public/status/updated_at/archived_at)을 건드리지 않음. AUTH 회귀 테스트(REQ-AUTH-014 deactivate) 통과 확인 |
+| **ALTER 중 데이터 손실** | 기존 004 suggestions 데이터가 ALTER 중 손실 | `ADD COLUMN IF NOT EXISTS` 사용, 기존 컬럼/데이터 보존. migration-007.test.ts에서 004 데이터 보존 검증(Phase A RED). PG 15 backfill: ADD COLUMN ... NOT NULL DEFAULT '...' 시 기존 행에 디폴트값 자동 채움 |
+| **AUTH deactivate 호환성 깨짐 (최고 위험 — Phase 1 검증 완료)** | AUTH deactivate route(deactivate/route.ts:131-136)가 갱신하는 author_id/author_label/archived 컬럼이 ALTER 후에도 존재/동작해야. UPDATE 가 신규 NOT NULL 컬럼(title/content/is_public/status)과 충돌하지 않아야 | (1) 기존 004 컬럼 보존(ALTER ADD만, 기존 컬럼 미건드림). (2) deactivate UPDATE 는 author_id/author_label/archived 만 갱신 — 신규 컬럼(title/content/is_public/status/updated_at/archived_at) 미참조. (3) **migration-007.test.ts 에서 deactivate 동일 UPDATE 실행 후 에러 없음 + unit_id 보존 + 신규 컬럼 간섭 없음 어설션 (Phase A RED, 최중요)**. (4) AUTH 회귀 테스트(REQ-AUTH-014 deactivate, 기존 333 테스트) 통과 확인 |
+| **archived_at 시맨틱 중복 (Phase 1 발견 — 버그 아님, 문서화)** | SUGGEST DELETE(archive)는 archived_at=now() 설정. AUTH deactivate(강제탈퇴)는 archived=true 설정하나 archived_at 미설정(기존 route 로직). 결과: 강제탈퇴로 아카이브된 건의는 archived=true ∧ archived_at=NULL | 이는 버그가 아님 — archived_at=NULL 은 "사용자 DELETE 가 아닌 강제탈퇴로 아카이브됨"을 나타내는 유용한 신호. 본 SPEC 은 deactivate route 수정 없음(Scope Discipline). 호수별 이력(M8a) 응답에서 archived_at 가 NULL 이어도 archived=true 면 아카이브 상태로 표현 |
 | **역할 분기 쿼리 복잡도** | REP 담당 동 분기(managed_building_id JOIN) 쿼리가 복잡, 성능/정확성 위험 | Parameterized Query, 인덱스(is_public, unit_id, author_id) 활용. 38세대 소규모 → 병목 아님. 역할별 테스트 케이스(RESIDENT/REP/CHAIR/ADMIN)로 검증 |
 | **비공개 403 vs 404 누출** | 무권한 비공개 건의 접근 시 404 반환하면 존재 여부 누출 | REQ-SUGGEST-024: 비공개 무권한 시 403(404 아님). 단, 미존재 건의는 404. 순서: 존재 확인(404) → 권한 확인(403) |
 | **상태 전이 검증 누락** | 접수→완료 스킵 등 불허 전이가 통과되면 데이터 무결성 위반 | REQ-SUGGEST-031 전이 규칙 맵으로 화이트리스트 검증. 위반 시 409. 테스트 케이스로 모든 불허 전이 검증 |
@@ -285,7 +296,7 @@ const ALLOWED_TRANSITIONS: Record<string, Set<string>> = {
 
 `spec.md` §7에 명시된 MX Tag Plan을 Run Phase에서 적용:
 
-- `@MX:ANCHOR`: suggestions CRUD route handlers, migration 007 스키마 불변 지점, rbac.ts requireAuthenticated 헬퍼
+- `@MX:ANCHOR`: suggestions CRUD route handlers, migration 007 스키마 불변 지점, suggest-rbac.ts requireAuthenticated 헬퍼 (fan_in=3: M1/M4/M5)
 - `@MX:WARN + @MX:REASON`: DELETE = archive semantics(ADR-005), 역할별 비공개 필터링, 상태 전이 검증, 비공개 403(404 아님)
 - `@MX:NOTE`: suggestions ALTER 기반 마이그레이션(004 보존), suggestion_categories 시드, unit_id NOT NULL(ADR-005), ADMIN 등록 권한 없음
 - `@MX:TODO`: SUGGEST-13 카테고리 CRUD, 첨부파일, 답변 수정/삭제

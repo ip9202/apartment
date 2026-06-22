@@ -47,7 +47,18 @@ apartment_community/
 │   │       │   ├── route.ts       # 목록 조회 (GET) + 등록 (POST)
 │   │       │   └── [id]/        # 상세 조회 (GET) + 수정 (PUT) + 삭제 (DELETE)
 │   │       │       └── route.ts
-│   │       ├── suggestions/      # 건의/문의 CRUD
+│   │       ├── suggestions/      # 건의/문의 CRUD (GET/POST/PUT/DELETE/답변/상태)
+│   │       │   ├── route.ts       # 목록 조회 (GET, 역할별 분기) + 등록 (POST)
+│   │       │   ├── [id]/        # 상세 조회 (GET) + 수정 (PUT) + 아카이브 (DELETE)
+│   │       │   │   ├── route.ts
+│   │       │   │   ├── replies/ # 답변 등록 (POST, ADMIN)
+│   │       │   │   │   └── route.ts
+│   │       │   │   └── status/   # 상태 변경 (PUT, ADMIN)
+│   │       │   │       └── route.ts
+│   │       │   └── units/       # 호수별 이력 조회 (GET, ADMIN/CHAIR)
+│   │       │       └── [building]/
+│   │       │           └── [unit]/
+│   │       │               └── route.ts
 │   │       ├── parking/          # 주차 추첨
 │   │       └── setup/            # 단지 설정 API
 │   │           ├── buildings/    # 동 관리 (GET 공개, POST ADMIN, DELETE ADMIN)
@@ -62,6 +73,7 @@ apartment_community/
 │   │   ├── db.ts                 # PostgreSQL 연결 풀 및 트랜잭션
 │   │   ├── auth.ts               # JWT 유틸리티 (발급, 검증, 갱신)
 │   │   ├── rbac.ts               # RBAC 헬퍼 (requireAdmin, requirePrivileged, 공통 응답)
+│   │   ├── suggest-rbac.ts       # SUGGEST 도메인 인증 헬퍼 (requireAuthenticated)
 │   │   └── middleware.ts         # 인증·권한 검증 미들웨어 (matcher 예외 처리)
 │   └── types/                     # TypeScript 타입 정의
 ├── public/                         # 정적 에셋
@@ -152,7 +164,7 @@ apartment_community/
 ### API 라우트
 - `/api/auth/*` - 회원가입, 로그인, 로그아웃, 토큰 갱신, 인증
 - `/api/notices/*` - 공지사항 CRUD
-- `/api/suggestions/*` - 건의/문의 CRUD, 답변, 상태 변경
+- `/api/suggestions/*` - 건의/문의 CRUD, 답변, 상태 변경, 호수별 이력
 - `/api/parking/*` - 주차 추첨 (회차, 신청, 추첨, 결과)
 - `/api/setup/*` - 단지 설정 (동, 호수, 직책, 회원)
 

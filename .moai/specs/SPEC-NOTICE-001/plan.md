@@ -24,12 +24,20 @@ CREATE TABLE IF NOT EXISTS notice_categories (
   sort_order INT NOT NULL DEFAULT 0
 );
 
+-- @MX:NOTE: [AUTO] name UNIQUE 제약 — 멱등 보장 (ON CONFLICT DO NOTHING 의 충돌 타겟).
+--           본 SPEC 은 4종 고정 시드이므로 name 으로 충돌 판별.
+CREATE TABLE IF NOT EXISTS notice_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(30) NOT NULL UNIQUE,
+  sort_order INT NOT NULL DEFAULT 0
+);
+
 INSERT INTO notice_categories (name, sort_order) VALUES
   ('일반', 1),
   ('긴급', 2),
   ('주차', 3),
   ('시설', 4)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (name) DO NOTHING;
 
 -- notices: ERD 준거
 CREATE TABLE IF NOT EXISTS notices (
@@ -49,9 +57,11 @@ CREATE INDEX idx_notices_created_at_desc ON notices(created_at DESC);
 ```
 
 **TDD 주기**:
-- RED: `migrations/006.test.ts` 작성(notice_categories 테이블 존재 + 4종 시드 행 존재 / notices 컬럼 존재 + 인덱스 존재 어설션) → 실패
-- GREEN: `006_notices.sql` 적용 → 통과
+- RED: `src/lib/migration-006.test.ts` 작성 (기존 5개 migration 테스트 파일명 규칙 준거 — `src/lib/migration-00X.test.ts`). `beforeAll` 에서 (1) notices/notice_categories 로컬 DROP, (2) `dropAllAuthTables` 호출, (3) 001→006 순차 `applySql(readMigration(...))` 적용. 어설션: notice_categories 4종 시드 행 존재 / notices 컬럼 존재 (assertColumnsExist) / 인덱스 존재 (indexExists) / FK 존재 (foreignKeyExists). → 실패
+- GREEN: `migrations/006_notices.sql` 적용 → 통과
 - REFACTOR: 불필요(단일 DDL)
+
+**주의 (idempotency)**: `notice_categories.name` 에 `UNIQUE` 제약 추가 필요. 그렇지 않으면 `INSERT ... ON CONFLICT DO NOTHING` 이 충돌 대상 없이 매 실행마다 4행씩 중복 삽입함 (기존 마이그레이션에는 INSERT 시드가 없어 선례 없는 케이스). UNIQUE 추가로 멱등 보장.
 
 ---
 
@@ -64,8 +74,8 @@ CREATE INDEX idx_notices_created_at_desc ON notices(created_at DESC);
 - `src/app/api/notices/route.test.ts` (신규)
 
 **구현 디테일**:
-- `GET /api/notices`: `verifyAccessToken` 인증(역할 무관). 쿼리 필터(`category_id` optional UUID, `page` 기본 1, `limit` 기본 20 최대 100). `notice_categories` JOIN으로 category명 반환. `created_at DESC` 정렬. 응답에 content 미포함(REQ-NOTICE-012). 총 total과 함께 반환.
-- `POST /api/notices`: `requireAdmin` 재사용. zod 검증(`title: string 1~100자`, `content: string 1~10000자`, `category_id: uuid`). category_id 존재 확인(없으면 422, REQ-NOTICE-002). `author_id` = 요청자(ADMIN) user id. `is_pinned`는 요청 본문에서 받지 않음(디폴트 false). 201 응답.
+- `GET /api/notices`: **route-level Bearer 인증 필수** — `middleware.ts` 는 AT 쿠키(Edge/jose)만 검사하고 Bearer 헤더를 검사하지 않으므로, API 라우트는 `verify-unit/route.ts:46-63` 패턴대로 `Authorization: Bearer ` 추출 → `verifyAccessToken` → 실패 시 401 (AC-NOTICE-018). 역할 무관 (RESIDENT/REP/AUDITOR/CHAIR/ADMIN 전부 허용, REQ-NOTICE-013a). 쿼리 필터(`category_id` optional UUID, `page` 기본 1, `limit` 기본 20 최대 100 — EC-NOTICE-005). `notice_categories` JOIN으로 category명 반환. `created_at DESC` 정렬. 응답에 content 미포함(REQ-NOTICE-012). 총 total과 함께 반환.
+- `POST /api/notices`: `requireAdmin` 재사용 (401/403 분기 처리). zod 검증(`title: string 1~100자`, `content: string 1~10000자`, `category_id: uuid 형식`). category_id 존재 확인(없으면 422, REQ-NOTICE-002 — DB FK 에러 전 사전 차단). `author_id` = `requireAdmin` 이 반환한 callerId. `is_pinned`는 요청 본문에서 받지 않음(디폴트 false, EC-NOTICE-006). 201 응답.
 
 **TDD 주기** (REQ-NOTICE-001, 002, 003a, 003b, 011, 012, 013a):
 - RED: 등록 201 / 미존재 category_id 422 / 등록 미인증 401 / 비-ADMIN 등록 403 / 목록 200 + 필터 / 목록 content 미포함 / 목록 미인증 401 테스트 작성 → 실패
@@ -83,7 +93,7 @@ CREATE INDEX idx_notices_created_at_desc ON notices(created_at DESC);
 - `src/app/api/notices/[id]/route.test.ts` (신규)
 
 **구현 디테일**:
-- `GET /api/notices/[id]`: `verifyAccessToken` 인증. UUID path param 검증. 공지 조회(id, title, content, category명, author_id, created_at, updated_at). 미존재 시 404(REQ-NOTICE-015).
+- `GET /api/notices/[id]`: **route-level Bearer 인증 필수** (Phase B GET 과 동일 — middleware 는 Bearer 미검사). `Authorization: Bearer` 추출 → `verifyAccessToken` → 실패 시 401 (AC-NOTICE-022). UUID path param 검증 (로컬 `const UUID_REGEX` 정의 — `verify-unit/route.ts:33`, `buildings/[id]/route.ts:40` 패턴. `validators.ts` 는 idiom 명칭이며 실제 import 아님). 불일치 시 400 (EC-NOTICE-003). 공지 조회(id, title, content, category명, author_id, created_at, updated_at). 미존재 시 404(REQ-NOTICE-015).
 
 **TDD 주기** (REQ-NOTICE-014, 015, 016a):
 - RED: 상세 200 / 미존재 404 / 상세 미인증 401 테스트 작성 → 실패
@@ -140,12 +150,12 @@ CREATE INDEX idx_notices_created_at_desc ON notices(created_at DESC);
 
 | 파일 | 모듈 | 설명 |
 |------|------|------|
-| `migrations/006_notices.sql` | M6 | notice_categories(시드) + notices 테이블 + 인덱스 |
-| `src/app/api/notices/route.ts` | M1/M4 | GET 인증(목록), POST ADMIN(등록) |
-| `src/app/api/notices/[id]/route.ts` | M2/M3/M5 | GET 인증(상세), PUT ADMIN(수정), DELETE ADMIN(삭제) |
+| `migrations/006_notices.sql` | M6 | notice_categories(시드, name UNIQUE) + notices 테이블 + 인덱스 |
+| `src/app/api/notices/route.ts` | M1/M4 | GET 인증(목록, route-level Bearer), POST ADMIN(등록) |
+| `src/app/api/notices/[id]/route.ts` | M2/M3/M5 | GET 인증(상세, route-level Bearer), PUT ADMIN(수정), DELETE ADMIN(삭제) |
 | `src/app/api/notices/route.test.ts` | M1/M4 | 테스트 |
 | `src/app/api/notices/[id]/route.test.ts` | M2/M3/M5 | 테스트 |
-| `migrations/006.test.ts` | M6 | migration 검증 테스트 |
+| `src/lib/migration-006.test.ts` | M6 | migration 검증 테스트 (기존 `src/lib/migration-00X.test.ts` 규칙 준거, `migration-test-helpers.ts` 재사용) |
 
 ### 수정 파일
 
@@ -156,7 +166,7 @@ CREATE INDEX idx_notices_created_at_desc ON notices(created_at DESC);
 - `src/lib/db.ts` (`query`)
 - `src/lib/auth.ts` (`verifyAccessToken`)
 - `src/lib/rbac.ts` (`requireAdmin`, `unauthorized`, `forbidden`, `badRequest`, `notFound`, `validationError`)
-- `src/lib/validators.ts` (UUID 검증 idiom) — `[id]` 라우트(M2/M3/M5)의 `:id` 파라미터 검증은 `validators.ts`의 `UUID_REGEX` + `z.string().refine()` idiom 사용. **`z.string().uuid()` 사용 금지** — zod 4에서 deprecated (현재 SETUP `setup/users/route.ts:31`, `setup/users/[id]/role/route.ts:63`에서 동일 경고 발생 중). `verify-unit/route.ts:32-42`가 이 idiom의 정석 구현 예시.
+- `src/lib/validators.ts` (UUID 검증 idiom) — `[id]` 라우트(M2/M3/M5)의 `:id` 파라미터 검증은 `UUID_REGEX` + `z.string().refine()` idiom 사용. **`z.string().uuid()` 사용 금지** — zod 4에서 deprecated (현재 SETUP `setup/users/route.ts:31`, `setup/users/[id]/role/route.ts:63`에서 동일 경고 발생 중). `verify-unit/route.ts:32-42`가 이 idiom의 정석 구현 예시. **참고**: `validators.ts` 는 `UUID_REGEX` 를 export 하지 않음 — 각 라우트가 로컬 `const UUID_REGEX = /^[0-9a-f]{8}-...$/i` 를 정의하는 패턴 (`verify-unit/route.ts:33`, `buildings/[id]/route.ts:40` 참조). "validators.ts idiom" = import 가 아닌 패턴 복제.
 
 ---
 
@@ -170,6 +180,9 @@ CREATE INDEX idx_notices_created_at_desc ON notices(created_at DESC);
 | **페이지네이션 OFFSET 성능** | 대량 공지 시 OFFSET 비용 | 38세대 소규모 커뮤니티 → 병목 아님. `created_at DESC` 인덱스 활용 |
 | **is_pinned 컬럼 혼란** | 컬럼 존재하나 API 미노출로 기여자 혼란 | `@MX:NOTE` 로 전방 호환성 결정 명시; 등록/수정 시 is_pinned 무시 |
 | **zod `.uuid()` deprecation** | NOTICE `/[id]` 라우트 UUID 검증 시 `z.string().uuid()` 사용하면 TS 진단 [6385] 발생 | `validators.ts`의 `UUID_REGEX` + `.refine()` idiom 사용 (`verify-unit/route.ts` 정석). 동일 진단이 SETUP 2개 라우트에 잔존 → 별도 기술 부채 정리 |
+| **notices.author_id FK (ON DELETE 미정의)** | ADMIN 회원 강제 탈퇴 시 `users DELETE` 가 `notices.author_id` FK (NOT NULL, NO ACTION) 위반으로 실패 가능. ADR-005 호수 귀속은 suggestions 만 해당. | 38세대 소규모 — ADMIN 삭제 빈도 극히 낮음. 본 SPEC 범위 외이므로 별도 이슈로 추적. suggestions(author_id NULLABLE) 와 달리 notices 은 NOT NULL 유지 (작성자 식별 필수). 완화 필요 시 향후 `ON DELETE SET NULL` + author_name 스냅샷 컬럼 추가 검토 |
+| **middleware vs route-level 401** | `middleware.ts` 는 AT 쿠키(Edge/jose)만 검사, Bearer 헤더 미검사. API 통합 테스트는 Bearer 사용 → middleware 만으로 401 미발생 | GET /api/notices, GET /api/notices/[id] 는 route handler 내부에서 `verify-unit/route.ts:46-63` 패턴으로 Bearer 추출 + verifyAccessToken 필수 (AC-NOTICE-018/022). 본 plan §1 Phase B/C 에 명시 |
+| **migration 006 멱등성** | `INSERT ... ON CONFLICT DO NOTHING` 이 충돌 타겟 없으면 매 실행마다 4행 중복 삽입 | `notice_categories.name UNIQUE` 제약 추가 + `ON CONFLICT (name) DO NOTHING` (본 plan §1 Phase A 반영) |
 
 ---
 

@@ -6,6 +6,7 @@
 
 - ✅ **AUTH P0 완료** (SPEC-AUTH-001): 회원가입·로그인·동/호수 인증·강제 탈퇴 (2026-06-20)
 - ✅ **SETUP P0 완료** (SPEC-SETUP-001): 동/호수/직책/회원 관리 (2026-06-22)
+- ✅ **NOTICE P0 완료** (SPEC-NOTICE-001): 공지사항 등록/수정/삭제/열람 (2026-06-22)
 
 ## 프로젝트 문서
 
@@ -36,3 +37,10 @@
 - `PUT /api/setup/buildings/[id]/units` - 호수 일괄 업데이트 (ADMIN)
 - `GET /api/setup/users` - 회원 목록 (ADMIN, 필터 지원)
 - `PUT /api/setup/users/[id]/role` - 직책 부여/회수 (ADMIN/CHAIR)
+
+### 공지사항 (NOTICE)
+- `GET /api/notices` - 공지 목록 (인증 사용자, 카테고리 필터 + 페이지네이션)
+- `POST /api/notices` - 공지 등록 (ADMIN)
+- `GET /api/notices/[id]` - 공지 상세 (인증 사용자)
+- `PUT /api/notices/[id]` - 공지 수정 (ADMIN)
+- `DELETE /api/notices/[id]` - 공지 삭제 (ADMIN, 영구 삭제)

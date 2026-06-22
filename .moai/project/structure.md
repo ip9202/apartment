@@ -43,7 +43,10 @@ apartment_community/
 │   │   │   └── setup/            # 단지 설정
 │   │   └── api/                  # REST API 엔드포인트
 │   │       ├── auth/             # 인증 API (회원가입, 로그인, 등)
-│   │       ├── notices/          # 공지사항 CRUD
+│   │       ├── notices/          # 공지사항 CRUD (GET 인증, POST/PUT/DELETE ADMIN)
+│   │       │   ├── route.ts       # 목록 조회 (GET) + 등록 (POST)
+│   │       │   └── [id]/        # 상세 조회 (GET) + 수정 (PUT) + 삭제 (DELETE)
+│   │       │       └── route.ts
 │   │       ├── suggestions/      # 건의/문의 CRUD
 │   │       ├── parking/          # 주차 추첨
 │   │       └── setup/            # 단지 설정 API

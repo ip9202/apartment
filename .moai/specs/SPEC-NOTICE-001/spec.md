@@ -276,3 +276,58 @@ Run Phase에서 다음 @MX 태그를 적용한다:
 ---
 
 *본 SPEC의 NOTICE routes는 greenfield(미구현)이므로 Delta 마커 없이 작성되었다. 단, migration 006(notices/notice_categories 생성)은 기존 DB에 신규 테이블을 추가하며 AUTH/SETUP 스키마에 영향을 주지 않는다(독립 테이블).*
+
+---
+
+## Implementation Notes
+
+**구현 완료일**: 2026-06-22
+**상태**: ✅ 완료 (P0), develop 브랜치에 병합됨 (커밋 84b5923)
+**테스트 커버리지**: 333/333 통과 (NOTICE route 93.45%)
+
+### 생성 파일
+
+| 파일 | 모듈 | 목적 |
+|------|------|------|
+| `migrations/006_notices.sql` | M6 | notice_categories 시드(일반/긴급/주차/시설) + notices 테이블 스키마 |
+| `src/app/api/notices/route.ts` | M1/M4 | GET 목록(인증 사용자, 필터+페이지네이션) + POST 등록(ADMIN) |
+| `src/app/api/notices/[id]/route.ts` | M2/M3/M5 | GET 상세(인증 사용자) + PUT 수정(ADMIN) + DELETE 삭제(ADMIN) |
+| `src/lib/migration-006.test.ts` | M6 | migration 006 검증 (11 tests) |
+| `src/app/api/notices/route.test.ts` | M1/M4 | 목록/등록 검증 (16 tests) |
+| `src/app/api/notices/[id]/route.test.ts` | M2/M3/M5 | 상세/수정/삭제 검증 (16 tests) |
+
+### 수정 파일
+
+| 파일 | 수정 내용 |
+|------|-----------|
+| 없음 | 독립 테이블로 AUTH/SETUP 스키마 무영향 |
+
+### 핵심 구현 결정
+
+1. **route-level Bearer 강제** (REQ-NOTICE-013a, 016a): middleware.ts는 AT 쿠키(Edge/jose)만 검사하고 Authorization 헤더를 검사하지 않는다. GET 핸들러 내부에서 requireAuth() 함수로 verifyAccessToken 직접 호출 (AUTH verify-unit 패턴 일관, AC-NOTICE-018, AC-NOTICE-022).
+2. **목록 content 구조적 배제** (REQ-NOTICE-012): GET /api/notices 응답의 각 공지 항목에 content 필드 미포함. 상세 GET에서만 content 반환.
+3. **category_id FK 사전 차단** (REQ-NOTICE-002, REQ-NOTICE-006): 등록/수정 시 notice_categories 테이블에서 category_id 존재 확인 후 미존재 시 422 반환 (FK 에러 사전 방지).
+4. **UUID path 검증** (EC-NOTICE-003): [id] path param에 UUID_REGEX 정규식 검증, 불일치 시 400 Bad Request 반환 (zod z.string().uuid() deprecated 패턴 일관).
+5. **is_pinned 전방 호환성** (REQ-NOTICE-018, Exclusions #2): notices 테이블에 is_pinned 컬럼 존재(디폴트 false), 본 SPEC은 API 동작 미노출(NOTICE-06 P1 별도 SPEC). 등록/수정 시 본문 값 무시.
+6. **영구 삭제(hard delete)** (REQ-NOTICE-008, Exclusions #7): DELETE FROM으로 영구 삭제. 기획서(기능명세서/PRD) 명시 정책. 소프트 삭제/archived 컬럼 없음.
+
+### 알려진 제한사항
+
+1. **첨부파일(attachments) 미구현**: 본 SPEC 범위 완전 제외 — 파일 저장소 백엔드(S3/Railway Volumes/Supabase Storage 등) 결정 후 별도 ADR/SPEC 필요 (Exclusions #1).
+2. **NOTICE-06 상단 고정 미구현**: is_pinned 컬럼 존재(디폴트 false), API 동작(등록/수정 시 설정, 목록 pinned 우선 정렬) 없음 — P1 별도 SPEC 필요 (Exclusions #2).
+3. **NOTICE-07 카테고리 동적 CRUD 미구현**: 4종(일반/긴급/주차/시설) 고정 시드, name UNIQUE로 멱등성 보장. 동적 카테고리 추가/수정/ 삭제는 P1 별도 SPEC 필요 (Exclusions #3).
+4. **notices.author_id FK ON DELETE 미정의**: ADMIN 강제 탈퇴(AUTH deactivate) 시 author_id FK 위반 가능성 — 38세대 소규모로 본 범위 외, 후속 ADR 필요 (progress.md Known limitations 참조).
+
+### 품질 검증 결과
+
+- **테스트**: 333/333 통과 (기존 290 + 신규 43: migration 11, 목록/등록 16, 상세/수정/삭제 16)
+- **타입**: `tsc --noEmit` 0 에러
+- **린트**: ESLint 0 경고
+- **보안**: OWASP CLEAN (manager-quality 합의, RBAC/SQL Injection/UUID 검증/Parameterized Query 전부 코드 레벨 확인)
+- **커버리지**: NOTICE route 93.45% lines (임계 85% 충족)
+
+### 의존성
+
+- **SPEC-AUTH-001 P0**: `users` 스키마(FK author_id) 및 `src/lib` (db.ts query, auth.ts verifyAccessToken) 재사용
+- **SPEC-SETUP-001 P0**: RBAC 헬퍼(rbac.ts requireAdmin, 응답 빌더 unauthorized/badRequest/notFound/validationError) 재사용
+

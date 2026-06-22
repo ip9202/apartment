@@ -1,7 +1,9 @@
 ## SPEC-NOTICE-001 Progress
 
 - Started: 2026-06-22 (Run Phase 착수)
-- Phase: Run 완료 (Phase A~E + V), PR 대기
+- Phase: Run 완료 → Sync 완료 (문서 동기화 완료, 본 PR)
+- Develop 병합: 2026-06-22 (커밋 84b5923, squash-merge 완료)
+- Feature 브랜치 삭제: 완료 (본 PR merge 후 자동 삭제)
 - Harness: standard (sub-agent mode), development_mode: tdd
 - 검증 전략: 각 Phase 후 MoAI 직접 npm test / tsc --noEmit 교차 검증 (Lesson: 에이전트 품질 보고 hallucination 방지)
 

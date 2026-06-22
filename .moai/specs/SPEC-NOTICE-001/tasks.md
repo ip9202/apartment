@@ -6,7 +6,7 @@ SPEC: SPEC-NOTICE-001
 
 | Task ID | Description | Requirement | Dependencies | Planned Files | Status |
 |---------|-------------|-------------|--------------|---------------|--------|
-| T-NOTICE-A | M6 notice_categories 시드 + notices 마이그레이션 | REQ-017,018, AC-001,002 | - | migrations/006_notices.sql, migrations/006.test.ts | pending |
+| T-NOTICE-A | M6 notice_categories 시드 + notices 마이그레이션 | REQ-017,018, AC-001,002 | - | migrations/006_notices.sql, src/lib/migration-006.test.ts | pending |
 | T-NOTICE-B | M1 공지 등록 + M4 공지 목록 열람 | REQ-001,002,003a,003b,011,012,013a, AC-003~006,016~019, EC-001,002,004,005,006 | T-NOTICE-A | src/app/api/notices/route.ts, src/app/api/notices/route.test.ts | pending |
 | T-NOTICE-C | M5 공지 상세 열람 | REQ-014,015,016a, AC-020,021,022, EC-003 | T-NOTICE-B | src/app/api/notices/[id]/route.ts (GET), src/app/api/notices/[id]/route.test.ts (GET) | pending |
 | T-NOTICE-D | M2 공지 수정 | REQ-004,005,006,007a,007b, AC-007~011 | T-NOTICE-C | src/app/api/notices/[id]/route.ts (PUT 추가), src/app/api/notices/[id]/route.test.ts (PUT 추가) | pending |

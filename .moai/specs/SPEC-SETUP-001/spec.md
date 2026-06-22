@@ -294,3 +294,57 @@ Run Phase에서 다음 @MX 태그를 적용한다:
 ---
 
 *본 SPEC의 SETUP routes(buildings/units/roles CRUD, users 목록, role 부여)는 greenfield(미구현)이므로 Delta 마커 없이 작성되었다. 단, `roles.managed_building_id` 제거 마이그레이션은 기존 roles 테이블을 수정(brownfield)하며, AUTH `migration-001.test.ts` 의 `assertColumnsExist` roles 블록(`migration-001.test.ts:90`) 업데이트에 대한 회귀 테스트 계획은 `plan.md`에 명시한다. `migration-001.test.ts:142-145` 의 `users_managed_building_id_fkey` 검증은 `users` 기반이므로 본 SPEC의 영향을 받지 않는다.*
+
+---
+
+## Implementation Notes
+
+**구현 완료일**: 2026-06-22  
+**상태**: ✅ 완료 (P0), develop 브랜치에 병합됨 (커밋 bb7b3f4)  
+**테스트 커버리지**: 290/290 통과
+
+### 생성 파일
+
+| 파일 | 모듈 | 목적 |
+|------|------|------|
+| `migrations/005_managed_building_unify.sql` | M5 | `roles.managed_building_id` 제거, `users.managed_building_id` 단일 출처 확정 |
+| `src/app/api/setup/buildings/route.ts` | M1/M6 | GET 공개(동/호수 조회), POST ADMIN(동 생성) |
+| `src/app/api/setup/buildings/[id]/route.ts` | M1 | DELETE ADMIN(동 삭제, 활성 입주민 409) |
+| `src/app/api/setup/buildings/[id]/units/route.ts` | M2 | PUT ADMIN(호수 일괄 업데이트, diff 트랜잭션) |
+| `src/app/api/setup/users/route.ts` | M4 | GET ADMIN(회원 목록, 필터 지원, password_hash 미노출) |
+| `src/app/api/setup/users/[id]/role/route.ts` | M3 | PUT ADMIN/CHAIR(직책 부여/회수, 회장 단일성 FOR UPDATE) |
+| `src/lib/rbac.ts` | 공통 | RBAC 헬퍼 (requireAdmin, requirePrivileged, 공통 응답 생성) |
+
+### 수정 파일
+
+| 파일 | 수정 내용 |
+|------|-----------|
+| `src/middleware.ts` | matcher 예외 추가 (`GET /api/setup/buildings` 공개, POST/DELETE는 핸들러 내부 인증) |
+| AUTH `src/lib/migration-001.test.ts` | `assertColumnsExist` roles 블록에서 `managed_building_id` 제거 (M5 영향) |
+
+### 핵심 구현 결정
+
+1. **회장(CHAIR) 단일성 원자 보장** (REQ-SETUP-010): `SELECT ... FOR UPDATE`로 기존 CHAIR 행을 잠그고 신규 CHAIR 부여 트랜잭션 직렬화. race condition 방어.
+2. **password_hash 구조적 배제** (REQ-SETUP-015): 명시적 컬럼 열거(`SELECT u.id, u.email, ...`)로 `password_hash` 절대 미포함. `SELECT *` 금지.
+3. **public GET matcher 예외** (REQ-SETUP-020): `GET /api/setup/buildings`만 비인증 허용. POST/DELETE는 `requireAdmin`으로 핸들러 내부에서 인증 강제.
+4. **diff 트랜잭션 멱등성** (REQ-SETUP-005): 호수 배열 = 최종 목표 상태. 기존 대비 diff(추가/DELETE)를 단일 트랜잭션으로 적용. 빈 배열 = 전체 삭제.
+5. **REP managed_building_id 단일 출처** (REQ-SETUP-019): REP 부여 시 `users.managed_building_id` 설정, RESIDENT 회수 시 `NULL` 정리. `roles.managed_building_id`는 M5로 제거됨.
+
+### 알려진 제한사항
+
+1. **INACTIVE 입주민 FK 차단**: INACTIVE 입주민이 `unit_id`로 귀속된 동/호수 삭제 시 FK RESTRICT로 409 반환 ( misleading message). AUTH 강제탈퇴(`deactivate`) 정책과 조율 필요 — `users.unit_id` 갱신은 AUTH 영역.
+2. **감사 로깅 미구현**: 401/403 이벤트 로깅 없음 — 모니터링 권장 (expert-security A09).
+3. **ast-grep gate**: sgconfig 미비로 scan 불가 — 인프라 후속.
+
+### 품질 검증 결과
+
+- **테스트**: 290/290 통과 (buildings 19, units 17, role 15, users 16)
+- **타입**: `tsc --noEmit` 0 에러
+- **린트**: ESLint 0 경고
+- **보안**: OWASP CLEAN (manager-quality + expert-security 합의, SQL injection/password_hash/RBAC/FOR UPDATE 전부 코드 레벨 확인)
+- **커버리지**: 85%+ 목표 달성
+
+### 의존성
+
+- **SPEC-AUTH-001 P0**: `buildings`/`units`/`roles`/`users` 스키마 및 `src/lib` (db, auth, cookies) 재사용
+- **AUTH 회귀**: AC-AUTH-015 (REP 인증) 및 migration-001.test.ts roles 블록 업데이트 통과 확인

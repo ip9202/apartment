@@ -47,11 +47,19 @@ apartment_community/
 │   │       ├── suggestions/      # 건의/문의 CRUD
 │   │       ├── parking/          # 주차 추첨
 │   │       └── setup/            # 단지 설정 API
+│   │           ├── buildings/    # 동 관리 (GET 공개, POST ADMIN, DELETE ADMIN)
+│   │           │   ├── [id]/     # 동 삭제 (DELETE ADMIN)
+│   │           │   │   └── units/ # 호수 일괄 업데이트 (PUT ADMIN)
+│   │           ├── users/        # 회원 관리 (GET ADMIN)
+│   │           │   └── [id]/     # 회원별 작업
+│   │           │       └── role/ # 직책 부여/회수 (PUT ADMIN/CHAIR)
+│   │           └── [빈 파일 없음] # M5 마이그레이션으로 roles.managed_building_id 제거됨
 │   ├── components/                # 재사용 UI 컴포넌트
 │   ├── lib/                       # 공통 유틸리티
-│   │   ├── db.ts                 # PostgreSQL 연결 풀
+│   │   ├── db.ts                 # PostgreSQL 연결 풀 및 트랜잭션
 │   │   ├── auth.ts               # JWT 유틸리티 (발급, 검증, 갱신)
-│   │   └── middleware.ts         # 인증·권한 검증 미들웨어
+│   │   ├── rbac.ts               # RBAC 헬퍼 (requireAdmin, requirePrivileged, 공통 응답)
+│   │   └── middleware.ts         # 인증·권한 검증 미들웨어 (matcher 예외 처리)
 │   └── types/                     # TypeScript 타입 정의
 ├── public/                         # 정적 에셋
 │   ├── favicon.ico

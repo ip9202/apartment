@@ -96,13 +96,18 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
 /**
  * matcher — 미들웨어 적용 경로.
  * 공개 API 인증 엔드포인트, Next.js 내부 자산, 파비콘은 제외.
+ *
+ * @MX:NOTE: [AUTO] SETUP-001 Phase B — /api/setup/buildings 경로 전체를 matcher 예외에서 제외.
+ *           Next.js middleware matcher 는 메서드 무관하게 경로 단위로만 매치되므로 GET(공개) 만
+ *           예외 처리할 수 없다. 따라서 POST/DELETE 의 RBAC(401/403) 는 route handler 의
+ *           requireAdmin 으로 시행한다 (REQ-SETUP-020, EC-006/007).
  */
 export const config = {
   matcher: [
     /*
-     * /api/auth/* (login/signup/refresh/verify-unit), /login, /signup, /verify,
-     * /_next/*, /favicon.ico 제외한 모든 경로에 매치.
+     * /api/auth/* (login/signup/refresh/verify-unit), /api/setup/buildings (공개 GET + 핸들러 내부 RBAC POST/DELETE),
+     * /login, /signup, /verify, /_next/*, /favicon.ico 제외한 모든 경로에 매치.
      */
-    '/((?!api/auth/login|api/auth/signup|api/auth/refresh|api/auth/verify-unit|login|signup|verify|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api/auth/login|api/auth/signup|api/auth/refresh|api/auth/verify-unit|api/setup/buildings|login|signup|verify|_next/static|_next/image|favicon.ico).*)',
   ],
 };

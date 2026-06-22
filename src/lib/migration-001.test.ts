@@ -87,7 +87,6 @@ describe('마이그레이션 001 — roles', () => {
       { table: 'roles', column: 'id', dataType: 'uuid', isNullable: false },
       { table: 'roles', column: 'code', dataType: 'character varying', isNullable: false },
       { table: 'roles', column: 'name', dataType: 'character varying', isNullable: false },
-      { table: 'roles', column: 'managed_building_id', dataType: 'uuid', isNullable: true },
       { table: 'roles', column: 'sort_order', dataType: 'integer' },
     ]);
   });

@@ -115,13 +115,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   });
 
   /**
-   * 에러 상태 설정.
-   */
-  const setError = useCallback((error: string) => {
-    setState((prev) => ({ ...prev, error, loading: false }));
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  /**
    * 로그인 액션.
    */
   const loginAction = useCallback(
@@ -143,7 +136,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
           error: null,
         });
       } else {
-        setError(result.error);
+        setState((prev) => ({ ...prev, error: result.error, loading: false }));
       }
     },
     []
@@ -164,9 +157,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: null,
       });
     } else {
-      setError(result.error);
+      setState((prev) => ({ ...prev, error: result.error, loading: false }));
     }
-  }, [setError]);
+  }, []);
 
   /**
    * 회원가입 액션.
@@ -202,10 +195,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           error: null,
         });
       } else {
-        setError(result.error);
+        setState((prev) => ({ ...prev, error: result.error, loading: false }));
       }
     },
-    [setError]
+    []
   );
 
   /**
@@ -232,10 +225,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
           error: null,
         });
       } else {
-        setError(result.error);
+        setState((prev) => ({ ...prev, error: result.error, loading: false }));
       }
     },
-    [setError]
+    []
   );
 
   /**

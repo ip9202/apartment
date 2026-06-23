@@ -8,12 +8,6 @@
  * @MX:NOTE: [AUTO] 단위 테스트로 순수 함수 검증 — Next.js 래퍼는 route.ts에서 별도 처리.
  */
 
-import { config } from 'dotenv';
-import { resolve } from 'node:path';
-
-// 테스트 환경 변수 로드
-config({ path: resolve(process.cwd(), '.env.local') });
-
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   extractJwtPayload,
@@ -35,9 +29,6 @@ type JWTPayload = {
 vi.mock('../db', () => ({
   query: vi.fn(),
 }));
-
-// 테스트용 JWT Secret 설정
-process.env.JWT_SECRET = '9809104b6d54969fd92499c28509967250a4ddcd4b7bdd54d6914045a2b64d03';
 
 describe('GET /api/auth/me - 세션 복원 엔드포인트', () => {
   beforeEach(() => {

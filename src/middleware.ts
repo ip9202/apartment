@@ -80,6 +80,15 @@ async function extractVerified(cookieValue: string | undefined): Promise<boolean
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
   const { pathname } = request.nextUrl;
+
+  // @MX:NOTE: [AUTO] 루트 '/' 는 Claude Design SPA 진입점 — 단일 페이지가 내부 state 로
+  //            12개 화면(로그인 포함)을 전환하므로 파일 라우트 /login 이 존재하지 않는다.
+  //            루트를 통과시키면 SPA 의 로그인 화면이 인증 진입을 담당한다.
+  //            실제 데이터/API 는 matcher + route handler RBAC 로 별도 보호된다.
+  if (pathname === '/') {
+    return NextResponse.next();
+  }
+
   const atCookie = request.cookies.get(ACCESS_COOKIE_NAME)?.value;
   const verified = await extractVerified(atCookie);
 

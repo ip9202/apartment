@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="7a6263e2-0f3d-4920-aa36-2567ee527686"></script>
+</head>
+<body>
+
+<x-dc>
+<helmet>
+  <style>/*
+Copyright (c) 2021 Kil Hyung-jin, with Reserved Font Name Pretendard.
+https://github.com/orioncactus/pretendard
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+This license is copied below, and is also available with a FAQ at:
+http://scripts.sil.org/OFL
+*/
+
+@font-face {
+	font-family: 'Pretendard';
+	font-weight: 900;
+	font-display: swap;
+	src: local('Pretendard Black'), url("e05840ae-73b1-497e-8065-48f0d728e0d4") format('woff2'), url("5ecebc3f-c3d9-492a-94d7-936364b9eb9c") format('woff');
+}
+
+@font-face {
+	font-family: 'Pretendard';
+	font-weight: 800;
+	font-display: swap;
+	src: local('Pretendard ExtraBold'), url("436ae331-c118-4afa-83a8-5997b57cbb77") format('woff2'), url("8fffe62d-91ce-45d8-a58d-360cc3c88adc") format('woff');
+}
+
+@font-face {
+	font-family: 'Pretendard';
+	font-weight: 700;
+	font-display: swap;
+	src: local('Pretendard Bold'), url("43187b57-5cbc-4e56-a2d4-0955345f741b") format('woff2'), url("d1b575dc-fc26-462d-af12-d8e2f8d343ec") format('woff');
+}
+
+@font-face {
+	font-family: 'Pretendard';
+	font-weight: 600;
+	font-display: swap;
+	src: local('Pretendard SemiBold'), url("bbf07704-5192-454b-bafa-94a7e6bb852c") format('woff2'), url("97ec339c-1c9a-410d-bae1-3cd2c8d1f4c2") format('woff');
+}
+
+@font-face {
+	font-family: 'Pretendard';
+	font-weight: 500;
+	font-display: swap;
+	src: local('Pretendard Medium'), url("b7c9f156-0d25-4dd2-9113-a742541778bf") format('woff2'), url("cd989123-afca-44d9-8263-471d8999af58") format('woff');
+}
+
+@font-face {
+	font-family: 'Pretendard';
+	font-weight: 400;
+	font-display: swap;
+	src: local('Pretendard Regular'), url("76ce486a-e479-40ce-982f-438d8c367d92") format('woff2'), url("c2a75914-6707-435d-9f4f-e0baab0c4be9") format('woff');
+}
+
+@font-face {
+	font-family: 'Pretendard';
+	font-weight: 300;
+	font-display: swap;
+	src: local('Pretendard Light'), url("1bc81d06-e179-4f26-9540-5b55b50ff870") format('woff2'), url("54d585ae-57be-4d49-99e9-3535600f081c") format('woff');
+}
+
+@font-face {
+	font-family: 'Pretendard';
+	font-weight: 200;
+	font-display: swap;
+	src: local('Pretendard ExtraLight'), url("92ec25f1-f89d-4986-8a56-5e37bb69f539") format('woff2'), url("062d4eff-a5cd-4969-b0db-47d80c32fb8d") format('woff');
+}
+
+@font-face {
+	font-family: 'Pretendard';
+	font-weight: 100;
+	font-display: swap;
+	src: local('Pretendard Thin'), url("5b6897bb-bc57-4306-b4e6-06886de92475") format('woff2'), url("ec84431d-2002-454c-afc7-b85134894471") format('woff');
+}
+</style>
+  <style>
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes slideUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+    body { margin:0; background:#F3F4F6; }
+    input,textarea,select,button { font-family:'Pretendard',-apple-system,system-ui,sans-serif; }
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#D1D5DB; border-radius:3px; }
+    * { box-sizing:border-box; }
+  </style>
+</helmet>
+
+<div style="font-family:'Pretendard',-apple-system,system-ui,sans-serif; -webkit-font-smoothing:antialiased; min-height:100vh;">
+
+  <!-- ── AUTH SCREENS ── -->
+  <sc-if value="{{ showAuthScreen }}" hint-placeholder-val="{{ true }}">
+    <div style="min-height:100vh; background:linear-gradient(135deg,#EFF6FF 0%,#F0F9FF 60%,#F3F4F6 100%); display:flex; align-items:center; justify-content:center; padding:40px 20px;">
+
+      <!-- LOGIN -->
+      <sc-if value="{{ showLogin }}" hint-placeholder-val="{{ true }}">
+        <div style="width:100%; max-width:440px; background:white; border-radius:24px; padding:48px; box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+          <div style="text-align:center; margin-bottom:40px;">
+            <div style="width:68px; height:68px; background:linear-gradient(135deg,#2563EB,#1D4ED8); border-radius:20px; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; box-shadow:0 8px 24px rgba(37,99,235,0.35);">
+              <span style="color:white; font-size:28px; font-weight:900; letter-spacing:-1px;">아</span>
+            </div>
+            <h1 style="font-size:24px; font-weight:900; color:#111827; margin:0 0 6px; letter-spacing:-0.8px;">아이뜨락</h1>
+            <p style="font-size:14px; color:#9CA3AF; margin:0;">서귀포 서홍동 아파트 커뮤니티</p>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:16px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:0.5px;">이메일</label>
+              <input type="email" value="{{ loginEmail }}" onchange="{{ setLoginEmail }}" onkeydown="{{ onLoginKeyDown }}" placeholder="이메일을 입력해 주세요" style="width:100%; height:48px; border:1.5px solid #E5E7EB; border-radius:10px; padding:0 16px; font-size:15px; color:#111827; outline:none; background:#F9FAFB;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:0.5px;">비밀번호</label>
+              <input type="password" value="{{ loginPassword }}" onchange="{{ setLoginPassword }}" onkeydown="{{ onLoginKeyDown }}" placeholder="비밀번호를 입력해 주세요" style="width:100%; height:48px; border:1.5px solid #E5E7EB; border-radius:10px; padding:0 16px; font-size:15px; color:#111827; outline:none; background:#F9FAFB;">
+            </div>
+          </div>
+          <sc-if value="{{ loginErrorVisible }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:10px 14px; background:#FEF2F2; border-radius:8px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+              <span style="font-size:15px;">⚠️</span>
+              <span style="font-size:13px; color:#DC2626;">{{ loginError }}</span>
+            </div>
+          </sc-if>
+          <button onclick="{{ login }}" style="width:100%; height:50px; background:{{ loginBtnBg }}; color:white; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:16px; letter-spacing:-0.2px;">
+            <sc-if value="{{ loginLoading }}" hint-placeholder-val="{{ false }}">
+              <span style="width:18px; height:18px; border:2.5px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; display:inline-block; animation:spin 0.7s linear infinite;"></span>
+            </sc-if>
+            <sc-if value="{{ loginNotLoading }}" hint-placeholder-val="{{ true }}">로그인</sc-if>
+          </button>
+          <p style="text-align:center; font-size:14px; color:#9CA3AF; margin:0 0 28px;">
+            계정이 없으신가요?&nbsp;<span onclick="{{ goSignup }}" style="color:#2563EB; font-weight:600; cursor:pointer;">회원가입</span>
+          </p>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <div style="flex:1; height:1px; background:#F3F4F6;"></div>
+            <span style="font-size:11px; color:#D1D5DB; font-weight:600; letter-spacing:0.6px; text-transform:uppercase;">소셜 로그인</span>
+            <div style="flex:1; height:1px; background:#F3F4F6;"></div>
+          </div>
+          <button onclick="{{ kakaoLogin }}" style="width:100%; height:50px; background:#FEE500; color:rgba(0,0,0,0.85); border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:9px; margin-bottom:16px; letter-spacing:-0.3px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(0,0,0,0.85)"><path d="M12 3C6.48 3 2 6.92 2 11.75c0 2.99 1.71 5.63 4.31 7.27L5.2 22.38a.5.5 0 0 0 .74.55l4.38-2.94c.55.07 1.1.11 1.68.11 5.52 0 10-3.92 10-8.75C22 6.92 17.52 3 12 3z"></path></svg>
+            카카오로 시작하기
+          </button>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <div style="flex:1; height:1px; background:#F3F4F6;"></div>
+            <span style="font-size:11px; color:#D1D5DB; font-weight:600; letter-spacing:0.6px; text-transform:uppercase;">체험하기</span>
+            <div style="flex:1; height:1px; background:#F3F4F6;"></div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button onclick="{{ demoLogin }}" style="flex:1; height:44px; background:#EFF6FF; color:#1D4ED8; border:1.5px solid #BFDBFE; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">👤 입주민</button>
+            <button onclick="{{ demoAdminLogin }}" style="flex:1; height:44px; background:#F0FDF4; color:#15803D; border:1.5px solid #BBF7D0; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer;">🔧 관리자</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- SIGNUP -->
+      <sc-if value="{{ showSignup }}" hint-placeholder-val="{{ false }}">
+        <div style="width:100%; max-width:480px; background:white; border-radius:24px; padding:40px 48px; box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:32px;">
+            <div onclick="{{ goBack }}" style="width:36px; height:36px; border-radius:10px; background:#F3F4F6; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <h2 style="font-size:20px; font-weight:900; color:#111827; margin:0; letter-spacing:-0.5px;">회원가입</h2>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:14px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:0.5px;">이메일</label>
+              <input type="email" placeholder="이메일을 입력해 주세요" style="width:100%; height:48px; border:1.5px solid #E5E7EB; border-radius:10px; padding:0 16px; font-size:15px; color:#111827; outline:none; background:#F9FAFB;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:0.5px;">비밀번호</label>
+              <input type="password" placeholder="8자 이상, 영문+숫자 조합" style="width:100%; height:48px; border:1.5px solid #E5E7EB; border-radius:10px; padding:0 16px; font-size:15px; color:#111827; outline:none; background:#F9FAFB;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:0.5px;">비밀번호 확인</label>
+              <input type="password" placeholder="비밀번호를 다시 입력해 주세요" style="width:100%; height:48px; border:1.5px solid #E5E7EB; border-radius:10px; padding:0 16px; font-size:15px; color:#111827; outline:none; background:#F9FAFB;">
+            </div>
+            <div style="padding:16px; background:#F9FAFB; border-radius:10px; border:1px solid #E5E7EB;">
+              <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                <div style="width:20px; height:20px; border:2px solid #2563EB; border-radius:5px; background:#2563EB; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><span style="color:white; font-size:11px; font-weight:900;">✓</span></div>
+                <span style="font-size:14px; font-weight:700; color:#111827;">전체 동의</span>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:10px; padding-left:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:13px; color:#6B7280;">[필수] 이용약관</span>
+                  <span style="font-size:12px; color:#2563EB; font-weight:600; cursor:pointer;">보기 ›</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:13px; color:#6B7280;">[필수] 개인정보 처리방침</span>
+                  <span style="font-size:12px; color:#2563EB; font-weight:600; cursor:pointer;">보기 ›</span>
+                </div>
+              </div>
+            </div>
+            <button onclick="{{ goVerify }}" style="width:100%; height:50px; background:#2563EB; color:white; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; letter-spacing:-0.2px;">회원가입</button>
+            <p style="text-align:center; font-size:14px; color:#9CA3AF; margin:0;">이미 계정이 있으신가요?&nbsp;<span onclick="{{ goLogin }}" style="color:#2563EB; font-weight:600; cursor:pointer;">로그인</span></p>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- VERIFY -->
+      <sc-if value="{{ showVerify }}" hint-placeholder-val="{{ false }}">
+        <div style="width:100%; max-width:440px; background:white; border-radius:24px; padding:40px 48px; box-shadow:0 8px 40px rgba(0,0,0,0.10);">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:32px;">
+            <div onclick="{{ goBack }}" style="width:36px; height:36px; border-radius:10px; background:#F3F4F6; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+            </div>
+            <h2 style="font-size:20px; font-weight:900; color:#111827; margin:0; letter-spacing:-0.5px;">동/호수 인증</h2>
+          </div>
+          <div style="text-align:center; margin-bottom:32px;">
+            <div style="font-size:52px; margin-bottom:14px;">🏠</div>
+            <h3 style="font-size:18px; font-weight:800; color:#111827; margin:0 0 8px; letter-spacing:-0.4px;">거주 중인 동/호수를 인증해 주세요</h3>
+            <p style="font-size:14px; color:#6B7280; margin:0; line-height:1.6;">입주민 자격 확인을 위한 1회성 인증입니다</p>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:14px; margin-bottom:24px;">
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:0.5px;">동 선택</label>
+              <select style="width:100%; height:48px; border:1.5px solid #E5E7EB; border-radius:10px; padding:0 16px; font-size:15px; color:#111827; outline:none; background:#F9FAFB; cursor:pointer; appearance:none;">
+                <option value="">동을 선택해 주세요</option>
+                <option value="A">A동</option>
+                <option value="B">B동</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:0.5px;">호수 선택</label>
+              <select style="width:100%; height:48px; border:1.5px solid #E5E7EB; border-radius:10px; padding:0 16px; font-size:15px; color:#111827; outline:none; background:#F9FAFB; cursor:pointer; appearance:none;">
+                <option value="">호수를 선택해 주세요</option>
+                <option>101호</option><option>102호</option><option>103호</option>
+                <option>201호</option><option>202호</option><option>203호</option>
+                <option>301호</option><option>302호</option><option>303호</option>
+                <option>401호</option><option>402호</option><option>403호</option>
+              </select>
+            </div>
+          </div>
+          <button onclick="{{ verifyComplete }}" style="width:100%; height:50px; background:#2563EB; color:white; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; letter-spacing:-0.2px;">인증하기</button>
+        </div>
+      </sc-if>
+
+    </div>
+  </sc-if>
+
+  <!-- ── MAIN APP ── -->
+  <sc-if value="{{ showApp }}" hint-placeholder-val="{{ false }}">
+    <div style="min-height:100vh; display:flex; background:#F3F4F6;">
+
+      <!-- SIDEBAR -->
+      <div style="width:256px; min-height:100vh; background:white; border-right:1px solid #E5E7EB; position:fixed; top:0; left:0; bottom:0; z-index:20; display:flex; flex-direction:column; overflow-y:auto;">
+
+        <!-- Logo -->
+        <div style="padding:22px 20px 18px; border-bottom:1px solid #F3F4F6; flex-shrink:0;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div style="width:38px; height:38px; background:linear-gradient(135deg,#2563EB,#1D4ED8); border-radius:11px; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 4px 12px rgba(37,99,235,0.28);">
+              <span style="color:white; font-size:16px; font-weight:900;">아</span>
+            </div>
+            <div>
+              <div style="font-size:16px; font-weight:900; color:#111827; letter-spacing:-0.5px; line-height:1.2;">아이뜨락</div>
+              <div style="font-size:11px; color:#9CA3AF; font-weight:500;">서귀포 서홍동</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nav -->
+        <nav style="padding:10px; flex:1;">
+
+          <!-- Resident nav -->
+          <sc-if value="{{ showResidentNav }}" hint-placeholder-val="{{ true }}">
+            <div onclick="{{ goHome }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:2px; background:{{ niHBg }}; color:{{ niHColor }};">
+              <span style="font-size:18px; line-height:1; flex-shrink:0;">🏠</span>
+              <span style="font-size:14px; font-weight:{{ niHFw }};">홈</span>
+            </div>
+            <div onclick="{{ goNotices }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:2px; background:{{ niNBg }}; color:{{ niNColor }};">
+              <span style="font-size:18px; line-height:1; flex-shrink:0;">📢</span>
+              <span style="font-size:14px; font-weight:{{ niNFw }};">공지사항</span>
+            </div>
+            <div onclick="{{ goSuggestions }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:2px; background:{{ niSBg }}; color:{{ niSColor }};">
+              <span style="font-size:18px; line-height:1; flex-shrink:0;">📝</span>
+              <span style="font-size:14px; font-weight:{{ niSFw }};">건의사항</span>
+            </div>
+            <div onclick="{{ goParking }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:2px; background:{{ niPBg }}; color:{{ niPColor }};">
+              <span style="font-size:18px; line-height:1; flex-shrink:0;">🚗</span>
+              <span style="font-size:14px; font-weight:{{ niPFw }};">주차 추첨</span>
+            </div>
+            <div onclick="{{ goMyPage }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:2px; background:{{ niMBg }}; color:{{ niMColor }};">
+              <span style="font-size:18px; line-height:1; flex-shrink:0;">👤</span>
+              <span style="font-size:14px; font-weight:{{ niMFw }};">마이페이지</span>
+            </div>
+          </sc-if>
+
+          <!-- Admin nav -->
+          <sc-if value="{{ showAdminNav }}" hint-placeholder-val="{{ false }}">
+            <div onclick="{{ goAdmin }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:2px; background:{{ niABg }}; color:{{ niAColor }};">
+              <span style="font-size:18px; line-height:1; flex-shrink:0;">🏠</span>
+              <span style="font-size:14px; font-weight:{{ niAFw }};">대시보드</span>
+            </div>
+            <div onclick="{{ goNotices }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:2px; background:{{ niNBg }}; color:{{ niNColor }};">
+              <span style="font-size:18px; line-height:1; flex-shrink:0;">📢</span>
+              <span style="font-size:14px; font-weight:{{ niNFw }};">공지사항</span>
+            </div>
+            <div onclick="{{ goSuggestions }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:2px; background:{{ niSBg }}; color:{{ niSColor }};">
+              <span style="font-size:18px; line-height:1; flex-shrink:0;">📝</span>
+              <span style="font-size:14px; font-weight:{{ niSFw }};">건의 관리</span>
+            </div>
+            <div onclick="{{ goParking }}" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; cursor:pointer; margin-bottom:2px; background:{{ niPBg }}; color:{{ niPColor }};">
+              <span style="font-size:18px; line-height:1; flex-shrink:0;">🚗</span>
+              <span style="font-size:14px; font-weight:{{ niPFw }};">추첨 관리</span>
+            </div>
+          </sc-if>
+
+        </nav>
+
+        <!-- User info -->
+        <div style="padding:16px; border-top:1px solid #F3F4F6; flex-shrink:0;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+            <div style="width:36px; height:36px; background:#EFF6FF; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px;">👤</div>
+            <div style="min-width:0;">
+              <div style="font-size:12px; color:#374151; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ sidebarEmail }}</div>
+              <div style="display:flex; align-items:center; gap:5px; margin-top:3px;">
+                <span style="background:{{ roleBadgeBg }}; color:white; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px;">{{ roleBadgeLabel }}</span>
+                <span style="font-size:11px; color:#9CA3AF;">{{ sidebarUnit }}</span>
+              </div>
+            </div>
+          </div>
+          <button onclick="{{ logout }}" style="width:100%; height:34px; background:#FEF2F2; color:#DC2626; border:1px solid #FEE2E2; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">로그아웃</button>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT -->
+      <div style="flex:1; margin-left:256px; min-height:100vh;" data-content-area="1">
+
+        <!-- HOME (SCR-H01) -->
+        <sc-if value="{{ showHome }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="background:white; border-bottom:1px solid #E5E7EB; padding:0 40px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10;">
+              <h1 style="font-size:20px; font-weight:900; color:#111827; margin:0; letter-spacing:-0.5px;">홈</h1>
+              <div style="width:36px; height:36px; background:#F9FAFB; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative;">
+                <span style="font-size:18px;">🔔</span>
+                <div style="position:absolute; top:7px; right:7px; width:7px; height:7px; background:#DC2626; border-radius:50%; border:1.5px solid white;"></div>
+              </div>
+            </div>
+            <div style="padding:32px 40px;">
+              <div style="margin-bottom:28px;">
+                <h2 style="font-size:22px; font-weight:900; color:#111827; margin:0 0 6px; letter-spacing:-0.5px;">안녕하세요, A동 201호 입주민님 👋</h2>
+                <p style="font-size:14px; color:#6B7280; margin:0;">오늘도 아이뜨락과 함께 편안한 하루 되세요.</p>
+              </div>
+              <!-- Pinned notices -->
+              <div style="margin-bottom:28px;">
+                <div style="font-size:12px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.6px; margin-bottom:12px;">📌 고정 공지</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <sc-for list="{{ pinnedNotices }}" as="notice" hint-placeholder-count="2">
+                    <div onclick="{{ openNotice }}" data-id="{{ notice.id }}" style="padding:14px 18px; background:white; border-radius:12px; display:flex; align-items:center; gap:12px; cursor:pointer; border:1px solid #DBEAFE; box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                      <span style="font-size:16px; flex-shrink:0;">📢</span>
+                      <span style="font-size:14px; font-weight:500; color:#1D4ED8; flex:1;">{{ notice.title }}</span>
+                      <span style="font-size:12px; color:#93C5FD; flex-shrink:0; white-space:nowrap;">{{ notice.date }}</span>
+                      <svg width="6" height="10" viewBox="0 0 7 12" fill="none"><path d="M1 11L6 6L1 1" stroke="#BFDBFE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <!-- 2-col layout -->
+              <div style="display:grid; grid-template-columns:1fr 360px; gap:24px; align-items:start;">
+                <!-- Recent notices -->
+                <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="padding:18px 24px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #F3F4F6;">
+                    <span style="font-size:16px; font-weight:900; color:#111827; letter-spacing:-0.5px;">최신 공지</span>
+                    <span onclick="{{ goNotices }}" style="font-size:13px; color:#2563EB; font-weight:600; cursor:pointer;">전체 보기 →</span>
+                  </div>
+                  <sc-for list="{{ recentNotices }}" as="notice" hint-placeholder-count="5">
+                    <div onclick="{{ openNotice }}" data-id="{{ notice.id }}" style="padding:14px 24px; border-bottom:1px solid #F9FAFB; cursor:pointer; display:flex; align-items:center; gap:14px;">
+                      <div style="flex:1; min-width:0;">
+                        <div style="font-size:14px; font-weight:500; color:#111827; margin-bottom:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.2px;">{{ notice.title }}</div>
+                        <div style="display:flex; align-items:center; gap:7px;">
+                          <span style="font-size:11px; font-weight:600; color:#2563EB; background:#EFF6FF; padding:2px 7px; border-radius:4px;">{{ notice.category }}</span>
+                          <span style="font-size:11px; color:#C4C9D4;">{{ notice.date }}</span>
+                        </div>
+                      </div>
+                      <svg width="6" height="10" viewBox="0 0 7 12" fill="none"><path d="M1 11L6 6L1 1" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                    </div>
+                  </sc-for>
+                </div>
+                <!-- Right column -->
+                <div style="display:flex; flex-direction:column; gap:16px;">
+                  <div onclick="{{ goParking }}" style="background:linear-gradient(135deg,#1E3A8A,#2563EB); border-radius:16px; padding:22px; cursor:pointer; overflow:hidden; position:relative;">
+                    <div style="position:absolute; right:-10px; top:-10px; font-size:80px; opacity:0.1; user-select:none; pointer-events:none;">🚗</div>
+                    <div style="font-size:11px; font-weight:700; color:#93C5FD; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:5px;">🎯 진행 중인 추첨</div>
+                    <div style="font-size:17px; font-weight:900; color:white; margin-bottom:4px; letter-spacing:-0.5px;">2026년 7월 주차 추첨</div>
+                    <div style="font-size:13px; color:#BFDBFE; margin-bottom:16px;">신청 6.21 ~ 6.25 · 현재 47명 신청</div>
+                    <div style="display:inline-flex; align-items:center; gap:4px; background:white; color:#1D4ED8; font-size:13px; font-weight:700; padding:8px 14px; border-radius:8px;">신청하기 →</div>
+                  </div>
+                  <div style="background:white; border-radius:16px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                    <div style="font-size:12px; font-weight:700; color:#9CA3AF; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:14px;">내 활동</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                      <div style="text-align:center; padding:14px; background:#F9FAFB; border-radius:10px;">
+                        <div style="font-size:26px; font-weight:900; color:#2563EB; margin-bottom:4px; letter-spacing:-0.5px;">3</div>
+                        <div style="font-size:12px; color:#6B7280; font-weight:500;">작성 건의</div>
+                      </div>
+                      <div style="text-align:center; padding:14px; background:#F9FAFB; border-radius:10px;">
+                        <div style="font-size:26px; font-weight:900; color:#16A34A; margin-bottom:4px; letter-spacing:-0.5px;">1</div>
+                        <div style="font-size:12px; color:#6B7280; font-weight:500;">완료 건의</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- NOTICE LIST (SCR-N01) -->
+        <sc-if value="{{ showNotices }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="background:white; border-bottom:1px solid #E5E7EB; padding:0 40px; height:64px; display:flex; align-items:center; position:sticky; top:0; z-index:10;">
+              <h1 style="font-size:20px; font-weight:900; color:#111827; margin:0; letter-spacing:-0.5px;">공지사항</h1>
+            </div>
+            <div style="background:white; padding:12px 40px; border-bottom:1px solid #E5E7EB; display:flex; gap:6px;">
+              <div data-filter="전체" onclick="{{ setNoticeFilter }}" style="height:34px; padding:0 16px; border-radius:17px; display:flex; align-items:center; font-size:13px; font-weight:{{ nAllWeight }}; cursor:pointer; background:{{ nAllBg }}; color:{{ nAllColor }}; border:1.5px solid {{ nAllBorder }};">전체</div>
+              <div data-filter="일반공지" onclick="{{ setNoticeFilter }}" style="height:34px; padding:0 16px; border-radius:17px; display:flex; align-items:center; font-size:13px; font-weight:{{ nGenWeight }}; cursor:pointer; background:{{ nGenBg }}; color:{{ nGenColor }}; border:1.5px solid {{ nGenBorder }};">일반공지</div>
+              <div data-filter="시설관리" onclick="{{ setNoticeFilter }}" style="height:34px; padding:0 16px; border-radius:17px; display:flex; align-items:center; font-size:13px; font-weight:{{ nFacWeight }}; cursor:pointer; background:{{ nFacBg }}; color:{{ nFacColor }}; border:1.5px solid {{ nFacBorder }};">시설관리</div>
+              <div data-filter="생활안내" onclick="{{ setNoticeFilter }}" style="height:34px; padding:0 16px; border-radius:17px; display:flex; align-items:center; font-size:13px; font-weight:{{ nLifeWeight }}; cursor:pointer; background:{{ nLifeBg }}; color:{{ nLifeColor }}; border:1.5px solid {{ nLifeBorder }};">생활안내</div>
+            </div>
+            <div style="padding:28px 40px; max-width:960px;">
+              <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                <sc-for list="{{ notices }}" as="notice" hint-placeholder-count="5">
+                  <div onclick="{{ openNotice }}" data-id="{{ notice.id }}" style="padding:16px 24px; border-bottom:1px solid #F9FAFB; cursor:pointer; display:flex; align-items:center; gap:14px;">
+                    <div style="flex:1; min-width:0;">
+                      <div style="font-size:15px; font-weight:500; color:#111827; margin-bottom:5px; letter-spacing:-0.2px;">{{ notice.title }}</div>
+                      <div style="display:flex; align-items:center; gap:7px;">
+                        <span style="font-size:11px; font-weight:600; color:#2563EB; background:#EFF6FF; padding:2px 7px; border-radius:4px;">{{ notice.category }}</span>
+                        <span style="font-size:12px; color:#C4C9D4;">{{ notice.date }}</span>
+                      </div>
+                    </div>
+                    <svg width="6" height="10" viewBox="0 0 7 12" fill="none"><path d="M1 11L6 6L1 1" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- NOTICE DETAIL (SCR-N02) -->
+        <sc-if value="{{ showNoticeDetail }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ hasNoticeSelected }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="background:white; border-bottom:1px solid #E5E7EB; padding:0 40px; height:64px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10;">
+                <div onclick="{{ goBack }}" style="width:36px; height:36px; background:#F3F4F6; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <h1 style="font-size:18px; font-weight:700; color:#111827; margin:0; letter-spacing:-0.3px;">공지 상세</h1>
+              </div>
+              <div style="padding:40px; max-width:800px;">
+                <div style="background:white; border-radius:16px; padding:40px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="display:flex; align-items:center; gap:7px; margin-bottom:16px; flex-wrap:wrap;">
+                    <span style="font-size:12px; font-weight:600; color:#2563EB; background:#EFF6FF; padding:4px 12px; border-radius:6px;">{{ selectedNotice.category }}</span>
+                    <sc-if value="{{ selectedNotice.pinned }}" hint-placeholder-val="{{ false }}">
+                      <span style="font-size:12px; font-weight:600; color:#DC2626; background:#FEF2F2; padding:4px 12px; border-radius:6px;">📌 고정</span>
+                    </sc-if>
+                  </div>
+                  <h2 style="font-size:22px; font-weight:900; color:#111827; margin:0 0 14px; line-height:1.45; letter-spacing:-0.5px;">{{ selectedNotice.title }}</h2>
+                  <div style="font-size:13px; color:#9CA3AF; margin-bottom:28px; padding-bottom:24px; border-bottom:1px solid #F3F4F6; display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:15px;">🏢</span><span>관리사무소</span><span>·</span><span>{{ selectedNotice.date }}</span>
+                  </div>
+                  <div style="font-size:15px; color:#374151; line-height:1.9; white-space:pre-line; letter-spacing:-0.1px;">{{ selectedNotice.content }}</div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <!-- SUGGESTION LIST (SCR-S01) -->
+        <sc-if value="{{ showSuggestions }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="background:white; border-bottom:1px solid #E5E7EB; padding:0 40px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10;">
+              <h1 style="font-size:20px; font-weight:900; color:#111827; margin:0; letter-spacing:-0.5px;">건의사항</h1>
+              <sc-if value="{{ showFAB }}" hint-placeholder-val="{{ false }}">
+                <button onclick="{{ goNewSuggestion }}" style="height:40px; padding:0 18px; background:#2563EB; color:white; border:none; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                  <span style="font-size:20px; line-height:1;">+</span><span>새 건의</span>
+                </button>
+              </sc-if>
+            </div>
+            <div style="background:white; padding:12px 40px; border-bottom:1px solid #E5E7EB; display:flex; gap:6px;">
+              <div data-filter="전체" onclick="{{ setSuggestionFilter }}" style="height:34px; padding:0 16px; border-radius:17px; display:flex; align-items:center; font-size:13px; font-weight:{{ sAllWeight }}; cursor:pointer; background:{{ sAllBg }}; color:{{ sAllColor }}; border:1.5px solid {{ sAllBorder }};">전체</div>
+              <div data-filter="접수" onclick="{{ setSuggestionFilter }}" style="height:34px; padding:0 16px; border-radius:17px; display:flex; align-items:center; font-size:13px; font-weight:{{ s1Weight }}; cursor:pointer; background:{{ s1Bg }}; color:{{ s1Color }}; border:1.5px solid {{ s1Border }};">접수</div>
+              <div data-filter="처리중" onclick="{{ setSuggestionFilter }}" style="height:34px; padding:0 16px; border-radius:17px; display:flex; align-items:center; font-size:13px; font-weight:{{ s2Weight }}; cursor:pointer; background:{{ s2Bg }}; color:{{ s2Color }}; border:1.5px solid {{ s2Border }};">처리중</div>
+              <div data-filter="완료" onclick="{{ setSuggestionFilter }}" style="height:34px; padding:0 16px; border-radius:17px; display:flex; align-items:center; font-size:13px; font-weight:{{ s3Weight }}; cursor:pointer; background:{{ s3Bg }}; color:{{ s3Color }}; border:1.5px solid {{ s3Border }};">완료</div>
+            </div>
+            <div style="padding:24px 40px; max-width:960px;">
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <sc-for list="{{ suggestions }}" as="item" hint-placeholder-count="5">
+                  <div onclick="{{ openSuggestion }}" data-id="{{ item.id }}" style="background:white; border-radius:12px; padding:18px 24px; cursor:pointer; box-shadow:0 1px 4px rgba(0,0,0,0.06); display:flex; align-items:center; gap:14px;">
+                    <div style="flex:1; min-width:0;">
+                      <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
+                        <span style="font-size:11px; font-weight:700; padding:3px 9px; border-radius:5px; background:{{ item.statusBg }}; color:{{ item.statusColor }};">{{ item.status }}</span>
+                        <span style="font-size:11px; color:#9CA3AF; background:#F3F4F6; padding:3px 8px; border-radius:5px;">{{ item.category }}</span>
+                        <sc-if value="{{ item.isPublic }}" hint-placeholder-val="{{ true }}">
+                          <span style="font-size:11px; color:#9CA3AF; background:#F3F4F6; padding:2px 7px; border-radius:4px;">공개</span>
+                        </sc-if>
+                      </div>
+                      <div style="font-size:15px; font-weight:600; color:#111827; margin-bottom:5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.2px;">{{ item.title }}</div>
+                      <div style="font-size:12px; color:#C4C9D4;">{{ item.unit }} · {{ item.date }}</div>
+                    </div>
+                    <svg width="6" height="10" viewBox="0 0 7 12" fill="none"><path d="M1 11L6 6L1 1" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- NEW SUGGESTION (SCR-S02) -->
+        <sc-if value="{{ showNewSuggestion }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="background:white; border-bottom:1px solid #E5E7EB; padding:0 40px; height:64px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10;">
+              <div onclick="{{ goBack }}" style="width:36px; height:36px; background:#F3F4F6; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+              </div>
+              <h1 style="font-size:18px; font-weight:700; color:#111827; margin:0; letter-spacing:-0.3px;">건의 등록</h1>
+            </div>
+            <div style="padding:40px; max-width:680px;">
+              <sc-if value="{{ showNewSuccess }}" hint-placeholder-val="{{ false }}">
+                <div style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:12px; animation:slideUp 0.3s ease;">
+                  <span style="font-size:22px;">✅</span>
+                  <div>
+                    <div style="font-size:14px; font-weight:700; color:#15803D; margin-bottom:1px;">등록 완료!</div>
+                    <div style="font-size:12px; color:#16A34A;">건의사항이 등록되었습니다.</div>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="background:white; border-radius:16px; padding:32px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                <div style="margin-bottom:24px;">
+                  <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">카테고리</label>
+                  <div style="display:flex; gap:7px; flex-wrap:wrap;">
+                    <div data-cat="시설" onclick="{{ setNewCategory }}" style="height:36px; padding:0 16px; border-radius:18px; display:flex; align-items:center; font-size:13px; font-weight:{{ c1Weight }}; cursor:pointer; background:{{ c1Bg }}; color:{{ c1Color }}; border:1.5px solid {{ c1Border }};">시설</div>
+                    <div data-cat="환경" onclick="{{ setNewCategory }}" style="height:36px; padding:0 16px; border-radius:18px; display:flex; align-items:center; font-size:13px; font-weight:{{ c2Weight }}; cursor:pointer; background:{{ c2Bg }}; color:{{ c2Color }}; border:1.5px solid {{ c2Border }};">환경</div>
+                    <div data-cat="안전" onclick="{{ setNewCategory }}" style="height:36px; padding:0 16px; border-radius:18px; display:flex; align-items:center; font-size:13px; font-weight:{{ c3Weight }}; cursor:pointer; background:{{ c3Bg }}; color:{{ c3Color }}; border:1.5px solid {{ c3Border }};">안전</div>
+                    <div data-cat="편의" onclick="{{ setNewCategory }}" style="height:36px; padding:0 16px; border-radius:18px; display:flex; align-items:center; font-size:13px; font-weight:{{ c4Weight }}; cursor:pointer; background:{{ c4Bg }}; color:{{ c4Color }}; border:1.5px solid {{ c4Border }};">편의</div>
+                    <div data-cat="기타" onclick="{{ setNewCategory }}" style="height:36px; padding:0 16px; border-radius:18px; display:flex; align-items:center; font-size:13px; font-weight:{{ c5Weight }}; cursor:pointer; background:{{ c5Bg }}; color:{{ c5Color }}; border:1.5px solid {{ c5Border }};">기타</div>
+                  </div>
+                </div>
+                <div style="margin-bottom:18px;">
+                  <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:0.5px;">제목</label>
+                  <input type="text" value="{{ newTitle }}" onchange="{{ setNewTitle }}" placeholder="제목을 입력해 주세요 (최대 100자)" style="width:100%; height:48px; border:1.5px solid #E5E7EB; border-radius:10px; padding:0 16px; font-size:15px; color:#111827; outline:none; background:#F9FAFB;">
+                </div>
+                <div style="margin-bottom:20px;">
+                  <label style="font-size:12px; font-weight:700; color:#374151; display:block; margin-bottom:7px; text-transform:uppercase; letter-spacing:0.5px;">내용</label>
+                  <textarea value="{{ newContent }}" onchange="{{ setNewContent }}" placeholder="불편하신 점이나 개선이 필요한 내용을 자유롭게 작성해 주세요" style="width:100%; height:140px; border:1.5px solid #E5E7EB; border-radius:10px; padding:12px 16px; font-size:15px; color:#111827; outline:none; background:#F9FAFB; resize:none; line-height:1.6;"></textarea>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; padding-top:18px; border-top:1px solid #F3F4F6;">
+                  <div>
+                    <div style="font-size:14px; font-weight:600; color:#374151; margin-bottom:2px;">공개 여부</div>
+                    <div style="font-size:12px; color:#9CA3AF;">공개 시 모든 입주민이 열람합니다</div>
+                  </div>
+                  <div onclick="{{ setNewPublic }}" style="width:48px; height:28px; border-radius:14px; cursor:pointer; position:relative; background:{{ publicToggleBg }}; transition:background 0.2s; flex-shrink:0;">
+                    <div style="position:absolute; top:3px; left:{{ publicToggleLeft }}; width:22px; height:22px; background:white; border-radius:11px; box-shadow:0 1px 3px rgba(0,0,0,0.2); transition:left 0.2s;"></div>
+                  </div>
+                </div>
+              </div>
+              <button onclick="{{ submitSuggestion }}" style="width:100%; height:52px; background:#2563EB; color:white; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; margin-top:16px; letter-spacing:-0.2px;">등록하기</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- SUGGESTION DETAIL (SCR-S03) -->
+        <sc-if value="{{ showSuggestionDetail }}" hint-placeholder-val="{{ false }}">
+          <sc-if value="{{ hasSuggestionSelected }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="background:white; border-bottom:1px solid #E5E7EB; padding:0 40px; height:64px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10;">
+                <div onclick="{{ goBack }}" style="width:36px; height:36px; background:#F3F4F6; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M12.5 15L7.5 10L12.5 5" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                </div>
+                <h1 style="font-size:18px; font-weight:700; color:#111827; margin:0; letter-spacing:-0.3px;">건의 상세</h1>
+              </div>
+              <div style="padding:32px 40px; display:grid; grid-template-columns:1fr 300px; gap:24px; align-items:start; max-width:1000px;">
+                <!-- Left: content + reply -->
+                <div style="display:flex; flex-direction:column; gap:16px;">
+                  <div style="background:white; border-radius:16px; padding:28px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                    <div style="display:flex; align-items:center; gap:7px; margin-bottom:14px;">
+                      <span style="font-size:12px; font-weight:700; padding:4px 12px; border-radius:6px; background:{{ selectedSuggestion.statusBg }}; color:{{ selectedSuggestion.statusColor }};">{{ selectedSuggestion.status }}</span>
+                      <span style="font-size:12px; color:#9CA3AF; background:#F3F4F6; padding:3px 10px; border-radius:5px;">{{ selectedSuggestion.category }}</span>
+                    </div>
+                    <h2 style="font-size:20px; font-weight:800; color:#111827; margin:0 0 10px; line-height:1.45; letter-spacing:-0.4px;">{{ selectedSuggestion.title }}</h2>
+                    <div style="font-size:13px; color:#9CA3AF; margin-bottom:18px; padding-bottom:18px; border-bottom:1px solid #F3F4F6;">{{ selectedSuggestion.unit }} · {{ selectedSuggestion.date }}</div>
+                    <p style="font-size:15px; color:#374151; line-height:1.85; margin:0;">{{ selectedSuggestion.content }}</p>
+                  </div>
+                  <sc-if value="{{ selectedSuggestionHasReply }}" hint-placeholder-val="{{ false }}">
+                    <div style="background:white; border-radius:16px; padding:28px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                      <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                        <div style="width:32px; height:32px; background:#EFF6FF; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;"><span style="font-size:16px;">🏢</span></div>
+                        <div>
+                          <div style="font-size:14px; font-weight:700; color:#1D4ED8;">관리사무소 답변</div>
+                          <div style="font-size:11px; color:#9CA3AF;">{{ selectedSuggestion.replyDate }}</div>
+                        </div>
+                      </div>
+                      <p style="font-size:14px; color:#374151; line-height:1.8; margin:0; padding:16px 18px; background:#F0F9FF; border-radius:10px; border-left:3px solid #2563EB;">{{ selectedSuggestion.reply }}</p>
+                    </div>
+                  </sc-if>
+                </div>
+                <!-- Right: timeline -->
+                <div style="background:white; border-radius:16px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="font-size:12px; font-weight:700; color:#374151; margin-bottom:20px; text-transform:uppercase; letter-spacing:0.4px;">처리 현황</div>
+                  <div>
+                    <div style="display:flex; align-items:flex-start; gap:14px;">
+                      <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+                        <div style="width:32px; height:32px; border-radius:50%; background:{{ selectedSuggestion.step0Bg }}; border:2px solid {{ selectedSuggestion.step0Border }}; display:flex; align-items:center; justify-content:center;">
+                          <span style="font-size:13px; color:{{ selectedSuggestion.step0Color }}; font-weight:700;">✓</span>
+                        </div>
+                        <div style="width:2px; height:36px; background:{{ selectedSuggestion.line1Bg }};"></div>
+                      </div>
+                      <div style="padding-top:6px; padding-bottom:28px;">
+                        <div style="font-size:14px; font-weight:600; color:{{ selectedSuggestion.step0LabelColor }}; margin-bottom:2px;">접수</div>
+                        <div style="font-size:12px; color:#9CA3AF;">건의사항 접수 완료</div>
+                      </div>
+                    </div>
+                    <div style="display:flex; align-items:flex-start; gap:14px;">
+                      <div style="display:flex; flex-direction:column; align-items:center; flex-shrink:0;">
+                        <div style="width:32px; height:32px; border-radius:50%; background:{{ selectedSuggestion.step1Bg }}; border:2px solid {{ selectedSuggestion.step1Border }}; display:flex; align-items:center; justify-content:center;">
+                          <span style="font-size:13px; color:{{ selectedSuggestion.step1Color }}; font-weight:700;">✓</span>
+                        </div>
+                        <div style="width:2px; height:36px; background:{{ selectedSuggestion.line2Bg }};"></div>
+                      </div>
+                      <div style="padding-top:6px; padding-bottom:28px;">
+                        <div style="font-size:14px; font-weight:600; color:{{ selectedSuggestion.step1LabelColor }}; margin-bottom:2px;">처리중</div>
+                        <div style="font-size:12px; color:#9CA3AF;">담당자 검토 및 처리</div>
+                      </div>
+                    </div>
+                    <div style="display:flex; align-items:flex-start; gap:14px;">
+                      <div style="flex-shrink:0;">
+                        <div style="width:32px; height:32px; border-radius:50%; background:{{ selectedSuggestion.step2Bg }}; border:2px solid {{ selectedSuggestion.step2Border }}; display:flex; align-items:center; justify-content:center;">
+                          <span style="font-size:13px; color:{{ selectedSuggestion.step2Color }}; font-weight:700;">✓</span>
+                        </div>
+                      </div>
+                      <div style="padding-top:6px;">
+                        <div style="font-size:14px; font-weight:600; color:{{ selectedSuggestion.step2LabelColor }}; margin-bottom:2px;">완료</div>
+                        <div style="font-size:12px; color:#9CA3AF;">처리 완료 및 답변</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <!-- PARKING (SCR-P01) -->
+        <sc-if value="{{ showParking }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="background:white; border-bottom:1px solid #E5E7EB; padding:0 40px; height:64px; display:flex; align-items:center; position:sticky; top:0; z-index:10;">
+              <h1 style="font-size:20px; font-weight:900; color:#111827; margin:0; letter-spacing:-0.5px;">주차 추첨</h1>
+            </div>
+            <div style="padding:32px 40px; max-width:900px; display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+              <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                <div style="background:linear-gradient(135deg,#1E3A8A,#2563EB); padding:24px;">
+                  <div style="font-size:11px; color:#93C5FD; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:5px;">진행 중인 추첨</div>
+                  <div style="font-size:20px; font-weight:900; color:white; margin-bottom:4px; letter-spacing:-0.5px;">2026년 7월 지정 주차</div>
+                  <div style="font-size:13px; color:#BFDBFE;">신청 기간: 6.21(토) ~ 6.25(수)</div>
+                </div>
+                <div style="padding:24px;">
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:22px;">
+                    <div>
+                      <div style="font-size:11px; color:#9CA3AF; margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px;">추첨 일시</div>
+                      <div style="font-size:14px; font-weight:700; color:#111827;">6.26(목) 자동 추첨</div>
+                    </div>
+                    <div>
+                      <div style="font-size:11px; color:#9CA3AF; margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px;">신청 인원</div>
+                      <div style="font-size:14px; font-weight:700; color:#111827;">47명</div>
+                    </div>
+                    <div>
+                      <div style="font-size:11px; color:#9CA3AF; margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px;">총 구역 수</div>
+                      <div style="font-size:14px; font-weight:700; color:#111827;">30구역</div>
+                    </div>
+                    <div>
+                      <div style="font-size:11px; color:#9CA3AF; margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px;">대상 구역</div>
+                      <div style="font-size:13px; font-weight:600; color:#374151;">A·B구역</div>
+                    </div>
+                  </div>
+                  <sc-if value="{{ parkingApplied }}" hint-placeholder-val="{{ false }}">
+                    <div style="background:#F0FDF4; border:1.5px solid #86EFAC; border-radius:10px; padding:12px 16px; margin-bottom:14px; display:flex; align-items:center; gap:10px; animation:slideUp 0.3s ease;">
+                      <span style="font-size:18px;">✅</span>
+                      <span style="font-size:14px; font-weight:600; color:#15803D;">추첨 신청이 완료되었습니다.</span>
+                    </div>
+                  </sc-if>
+                  <button onclick="{{ applyParking }}" style="width:100%; height:50px; background:{{ parkingBtnBg }}; color:white; border:none; border-radius:12px; font-size:16px; font-weight:700; cursor:pointer; letter-spacing:-0.2px;">{{ parkingBtnLabel }}</button>
+                </div>
+              </div>
+              <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                <div style="padding:18px 24px; border-bottom:1px solid #F3F4F6;">
+                  <span style="font-size:15px; font-weight:800; color:#111827; letter-spacing:-0.3px;">지난 추첨 이력</span>
+                </div>
+                <div style="padding:18px 24px; border-bottom:1px solid #F9FAFB; display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <div style="font-size:14px; font-weight:600; color:#111827; margin-bottom:2px;">2026년 6월 주차 추첨</div>
+                    <div style="font-size:12px; color:#9CA3AF;">신청 39명 · 당첨 30명</div>
+                  </div>
+                  <span style="font-size:12px; font-weight:600; color:#16A34A; background:#DCFCE7; padding:4px 10px; border-radius:6px;">완료</span>
+                </div>
+                <div style="padding:18px 24px; display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <div style="font-size:14px; font-weight:600; color:#111827; margin-bottom:2px;">2026년 5월 주차 추첨</div>
+                    <div style="font-size:12px; color:#9CA3AF;">신청 43명 · 당첨 30명</div>
+                  </div>
+                  <span style="font-size:12px; font-weight:600; color:#16A34A; background:#DCFCE7; padding:4px 10px; border-radius:6px;">완료</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- MY PAGE (SCR-M01) -->
+        <sc-if value="{{ showMyPage }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="background:white; border-bottom:1px solid #E5E7EB; padding:0 40px; height:64px; display:flex; align-items:center; position:sticky; top:0; z-index:10;">
+              <h1 style="font-size:20px; font-weight:900; color:#111827; margin:0; letter-spacing:-0.5px;">마이페이지</h1>
+            </div>
+            <div style="padding:32px 40px; max-width:860px; display:grid; grid-template-columns:280px 1fr; gap:24px; align-items:start;">
+              <div style="background:white; border-radius:16px; padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                <div style="text-align:center; padding-bottom:20px; border-bottom:1px solid #F3F4F6; margin-bottom:20px;">
+                  <div style="width:64px; height:64px; border-radius:32px; background:#EFF6FF; display:flex; align-items:center; justify-content:center; font-size:28px; margin:0 auto 12px;">👤</div>
+                  <div style="font-size:13px; font-weight:600; color:#111827; margin-bottom:7px; word-break:break-all;">resident@aitteulak.com</div>
+                  <div style="display:flex; align-items:center; justify-content:center; gap:6px;">
+                    <span style="font-size:11px; font-weight:700; color:white; background:#2563EB; padding:3px 8px; border-radius:4px;">입주민</span>
+                    <span style="font-size:13px; color:#374151; font-weight:600;">A동 201호</span>
+                  </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                  <div style="text-align:center; padding:14px; background:#F9FAFB; border-radius:10px;">
+                    <div style="font-size:24px; font-weight:900; color:#2563EB; margin-bottom:4px; letter-spacing:-0.5px;">3</div>
+                    <div style="font-size:12px; color:#6B7280; font-weight:500;">작성한 건의</div>
+                  </div>
+                  <div style="text-align:center; padding:14px; background:#F9FAFB; border-radius:10px;">
+                    <div style="font-size:24px; font-weight:900; color:#16A34A; margin-bottom:4px; letter-spacing:-0.5px;">1</div>
+                    <div style="font-size:12px; color:#6B7280; font-weight:500;">완료된 건의</div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:14px;">
+                <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div onclick="{{ goSuggestions }}" style="padding:16px 22px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; border-bottom:1px solid #F9FAFB;">
+                    <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:20px;">📝</span><span style="font-size:15px; font-weight:500; color:#111827;">내 건의사항</span></div>
+                    <svg width="6" height="10" viewBox="0 0 7 12" fill="none"><path d="M1 11L6 6L1 1" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                  <div style="padding:16px 22px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; border-bottom:1px solid #F9FAFB;">
+                    <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:20px;">🔔</span><span style="font-size:15px; font-weight:500; color:#111827;">알림 설정</span></div>
+                    <svg width="6" height="10" viewBox="0 0 7 12" fill="none"><path d="M1 11L6 6L1 1" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                  <div style="padding:16px 22px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+                    <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:20px;">🔒</span><span style="font-size:15px; font-weight:500; color:#111827;">비밀번호 변경</span></div>
+                    <svg width="6" height="10" viewBox="0 0 7 12" fill="none"><path d="M1 11L6 6L1 1" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                </div>
+                <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="padding:16px 22px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; border-bottom:1px solid #F9FAFB;">
+                    <span style="font-size:14px; color:#374151;">이용약관</span>
+                    <svg width="6" height="10" viewBox="0 0 7 12" fill="none"><path d="M1 11L6 6L1 1" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                  <div style="padding:16px 22px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+                    <span style="font-size:14px; color:#374151;">개인정보 처리방침</span>
+                    <svg width="6" height="10" viewBox="0 0 7 12" fill="none"><path d="M1 11L6 6L1 1" stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                  </div>
+                </div>
+                <button onclick="{{ logout }}" style="width:100%; height:46px; background:white; color:#DC2626; border:1.5px solid #FEE2E2; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer;">로그아웃</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <!-- ADMIN DASHBOARD (SCR-AD01) -->
+        <sc-if value="{{ showAdmin }}" hint-placeholder-val="{{ false }}">
+          <div>
+            <div style="background:white; border-bottom:1px solid #E5E7EB; padding:0 40px; height:64px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:10;">
+              <div>
+                <div style="font-size:11px; color:#9CA3AF; font-weight:600; text-transform:uppercase; letter-spacing:0.4px;">관리사무소</div>
+                <h1 style="font-size:18px; font-weight:900; color:#111827; margin:0; letter-spacing:-0.5px;">관리 대시보드</h1>
+              </div>
+              <div style="width:36px; height:36px; background:#EFF6FF; border-radius:10px; display:flex; align-items:center; justify-content:center;"><span style="font-size:18px;">🔧</span></div>
+            </div>
+            <div style="padding:32px 40px;">
+              <!-- Stats -->
+              <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px;">
+                <div style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="font-size:11px; color:#9CA3AF; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:10px;">미처리 건의</div>
+                  <div style="font-size:34px; font-weight:900; color:#D97706; margin-bottom:4px; letter-spacing:-1px;">3</div>
+                  <div style="font-size:12px; color:#9CA3AF;">처리 대기 중</div>
+                </div>
+                <div style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="font-size:11px; color:#9CA3AF; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:10px;">미인증 회원</div>
+                  <div style="font-size:34px; font-weight:900; color:#DC2626; margin-bottom:4px; letter-spacing:-1px;">5</div>
+                  <div style="font-size:12px; color:#9CA3AF;">동/호수 미인증</div>
+                </div>
+                <div style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="font-size:11px; color:#9CA3AF; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:10px;">진행 추첨</div>
+                  <div style="font-size:34px; font-weight:900; color:#2563EB; margin-bottom:4px; letter-spacing:-1px;">1</div>
+                  <div style="font-size:12px; color:#9CA3AF;">신청자 47명</div>
+                </div>
+                <div style="background:white; border-radius:14px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="font-size:11px; color:#9CA3AF; font-weight:600; text-transform:uppercase; letter-spacing:0.3px; margin-bottom:10px;">오늘 공지</div>
+                  <div style="font-size:34px; font-weight:900; color:#16A34A; margin-bottom:4px; letter-spacing:-1px;">1</div>
+                  <div style="font-size:12px; color:#9CA3AF;">등록 완료</div>
+                </div>
+              </div>
+              <!-- 2-col -->
+              <div style="display:grid; grid-template-columns:1fr 280px; gap:24px; align-items:start;">
+                <div style="background:white; border-radius:16px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="padding:16px 24px; border-bottom:1px solid #F3F4F6; display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:15px; font-weight:800; color:#111827; letter-spacing:-0.3px;">최근 건의</span>
+                    <span onclick="{{ goSuggestions }}" style="font-size:13px; color:#2563EB; font-weight:600; cursor:pointer;">전체 보기 →</span>
+                  </div>
+                  <sc-for list="{{ allSuggestions }}" as="item" hint-placeholder-count="5">
+                    <div onclick="{{ openSuggestion }}" data-id="{{ item.id }}" style="padding:14px 24px; border-bottom:1px solid #F9FAFB; cursor:pointer; display:flex; align-items:center; gap:12px;">
+                      <div style="flex:1; min-width:0;">
+                        <div style="font-size:14px; font-weight:500; color:#111827; margin-bottom:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; letter-spacing:-0.2px;">{{ item.title }}</div>
+                        <div style="font-size:11px; color:#9CA3AF;">{{ item.unit }} · {{ item.date }}</div>
+                      </div>
+                      <span style="font-size:11px; font-weight:700; padding:3px 9px; border-radius:5px; flex-shrink:0; background:{{ item.statusBg }}; color:{{ item.statusColor }};">{{ item.status }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="background:white; border-radius:16px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,0.06);">
+                  <div style="font-size:12px; font-weight:700; color:#374151; margin-bottom:14px; text-transform:uppercase; letter-spacing:0.3px;">빠른 관리</div>
+                  <div style="display:flex; flex-direction:column; gap:8px;">
+                    <div style="padding:14px 16px; background:#EFF6FF; border-radius:10px; display:flex; align-items:center; gap:10px; cursor:pointer;">
+                      <span style="font-size:20px;">📢</span>
+                      <span style="font-size:13px; font-weight:700; color:#1D4ED8;">공지 등록</span>
+                    </div>
+                    <div onclick="{{ goSuggestions }}" style="padding:14px 16px; background:#FEF3C7; border-radius:10px; display:flex; align-items:center; gap:10px; cursor:pointer;">
+                      <span style="font-size:20px;">📝</span>
+                      <span style="font-size:13px; font-weight:700; color:#92400E;">건의 관리</span>
+                    </div>
+                    <div onclick="{{ goParking }}" style="padding:14px 16px; background:#F0FDF4; border-radius:10px; display:flex; align-items:center; gap:10px; cursor:pointer;">
+                      <span style="font-size:20px;">🚗</span>
+                      <span style="font-size:13px; font-weight:700; color:#166534;">추첨 관리</span>
+                    </div>
+                    <div style="padding:14px 16px; background:#F3F4F6; border-radius:10px; display:flex; align-items:center; gap:10px; cursor:pointer;">
+                      <span style="font-size:20px;">👥</span>
+                      <span style="font-size:13px; font-weight:700; color:#374151;">회원 관리</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;initialView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;home&quot;,&quot;notices&quot;,&quot;suggestions&quot;,&quot;parking&quot;,&quot;mypage&quot;,&quot;admin&quot;],&quot;default&quot;:&quot;parking&quot;},&quot;userRole&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;RESIDENT&quot;,&quot;ADMIN&quot;],&quot;default&quot;:&quot;ADMIN&quot;}}">
+class Component extends DCLogic {
+
+  getTimeline(step) {
+    if (step < 0) return {
+      step0Bg:'#F3F4F6', step0Border:'#E5E7EB', step0Color:'#9CA3AF', step0LabelColor:'#9CA3AF',
+      step1Bg:'#F3F4F6', step1Border:'#E5E7EB', step1Color:'#9CA3AF', step1LabelColor:'#9CA3AF',
+      step2Bg:'#F3F4F6', step2Border:'#E5E7EB', step2Color:'#9CA3AF', step2LabelColor:'#9CA3AF',
+      line1Bg:'#E5E7EB', line2Bg:'#E5E7EB',
+    };
+    return {
+      step0Bg: step>=0?'#2563EB':'#FFFFFF', step0Border: step>=0?'#2563EB':'#E5E7EB',
+      step0Color: step>=0?'#FFFFFF':'#D1D5DB', step0LabelColor: step>=0?'#2563EB':'#9CA3AF',
+      step1Bg: step>=1?'#2563EB':'#FFFFFF', step1Border: step>=1?'#2563EB':'#E5E7EB',
+      step1Color: step>=1?'#FFFFFF':'#D1D5DB', step1LabelColor: step>=1?'#2563EB':'#9CA3AF',
+      step2Bg: step>=2?'#2563EB':'#FFFFFF', step2Border: step>=2?'#2563EB':'#E5E7EB',
+      step2Color: step>=2?'#FFFFFF':'#D1D5DB', step2LabelColor: step>=2?'#2563EB':'#9CA3AF',
+      line1Bg: step>=1?'#2563EB':'#E5E7EB',
+      line2Bg: step>=2?'#2563EB':'#E5E7EB',
+    };
+  }
+
+  notices = [
+    { id:1, title:'[긴급] 태풍 대비 안전 점검 안내', category:'일반공지', date:'2026.06.20', pinned:true, content:'태풍 "케이라" 북상으로 인해 단지 내 안전 점검을 실시합니다.\n\n• 외부 시설물 고정 및 점검: 6월 21일 오전 9시\n• 지하주차장 침수 방지 모래주머니 설치: 6월 21일 오전 10시\n• 태풍 통과 예상: 6월 22일 오전 2시 ~ 8시\n\n입주민 여러분께서는 외출을 자제하시고 창문과 베란다 화분 등을 안전하게 정리해 주시기 바랍니다.\n\n문의: 관리사무소 064-762-XXXX' },
+    { id:2, title:'2026년 7월 주차 추첨 공고', category:'공지', date:'2026.06.19', pinned:true, content:'2026년 7월 지정 주차 구역 추첨을 아래와 같이 실시합니다.\n\n■ 신청 기간: 2026.06.21(토) ~ 2026.06.25(수)\n■ 대상 구역: A구역(A-01~A-20), B구역(B-01~B-10)\n■ 추첨 방식: 서버 자동 추첨 (결과 즉시 공개)\n■ 신청 방법: 서비스 앱 내 주차 추첨 메뉴\n\n※ 중복 신청 불가, 당첨 구역은 7월 한 달간 유효합니다.' },
+    { id:3, title:'B동 엘리베이터 정기 점검 안내', category:'시설관리', date:'2026.06.17', pinned:false, content:'B동 엘리베이터 정기 안전 점검이 아래와 같이 진행됩니다.\n\n■ 일시: 2026.06.19(금) 오전 10시 ~ 오후 1시\n■ 해당 엘리베이터: B동 1호기\n■ 점검 업체: (주)오티스엘리베이터코리아\n\n점검 중 일시 이용 중단됩니다. 불편을 드려 죄송합니다.' },
+    { id:4, title:'단지 내 반려동물 에티켓 안내', category:'생활안내', date:'2026.06.15', pinned:false, content:'단지 내 반려동물 관련 민원이 증가하고 있어 안내드립니다.\n\n① 반드시 목줄 착용\n② 반려동물 배변 즉시 처리\n③ 엘리베이터 탑승 시 안고 탑승\n④ 야간 짖음 자제\n\n위반 시 입주민 대표회의 규정에 따라 관리될 수 있습니다.' },
+    { id:5, title:'여름철 분리수거 강화 안내', category:'생활안내', date:'2026.06.10', pinned:false, content:'여름철 기온 상승으로 분리수거장 악취 및 해충 방지를 위해 분리수거를 강화합니다.\n\n• 음식물 쓰레기: 매일 오전 7시 ~ 오후 8시\n• 재활용 수거: 월·수·금 오전 9시\n• 일반 쓰레기: 전용 봉투 필수\n\n협조해 주셔서 감사합니다.' },
+  ];
+
+  suggestions = [
+    { id:1, title:'엘리베이터 버튼 파손 수리 요청', category:'시설', status:'완료', statusColor:'#16A34A', statusBg:'#DCFCE7', unit:'B동 102호', date:'2026.06.10', isPublic:true, content:'B동 1호기 엘리베이터 2층 버튼이 파손되어 작동이 안 됩니다. 빠른 수리 부탁드립니다.', reply:'접수된 건의사항에 감사드립니다. 6월 12일 오전에 수리 완료하였습니다. 불편을 드려 죄송합니다.', hasReply:true, replyDate:'2026.06.12', ...this.getTimeline(2) },
+    { id:2, title:'지하주차장 3구역 조명 어두움', category:'시설', status:'처리중', statusColor:'#D97706', statusBg:'#FEF3C7', unit:'A동 305호', date:'2026.06.15', isPublic:false, content:'지하주차장 B구역 입구 쪽 조명이 많이 어두워서 야간에 위험합니다. LED 교체 혹은 추가 설치 부탁드립니다.', reply:null, hasReply:false, replyDate:null, ...this.getTimeline(1) },
+    { id:3, title:'분리수거장 악취 개선 요청', category:'환경', status:'접수', statusColor:'#0284C7', statusBg:'#E0F2FE', unit:'A동 201호', date:'2026.06.18', isPublic:true, content:'분리수거장 주변에 악취가 심하게 납니다. 탈취제 설치나 정기 청소 주기를 늘려주시면 감사하겠습니다.', reply:null, hasReply:false, replyDate:null, ...this.getTimeline(0) },
+    { id:4, title:'옥상 스프링클러 누수 신고', category:'안전', status:'처리중', statusColor:'#D97706', statusBg:'#FEF3C7', unit:'B동 401호', date:'2026.06.19', isPublic:true, content:'B동 옥상 스프링클러에서 물이 새고 있습니다. 안전 점검이 필요합니다.', reply:null, hasReply:false, replyDate:null, ...this.getTimeline(1) },
+    { id:5, title:'택배 무인보관함 증설 요청', category:'편의', status:'보류', statusColor:'#6B7280', statusBg:'#F3F4F6', unit:'A동 103호', date:'2026.06.20', isPublic:false, content:'현재 무인보관함이 부족해서 택배 분실 및 반송이 자주 발생합니다. 추가 설치 검토해 주세요.', reply:'예산 검토 중입니다. 다음 입주자 대표회의(7월)에서 논의 예정입니다.', hasReply:true, replyDate:'2026.06.20', ...this.getTimeline(-1) },
+  ];
+
+  state = {
+    screen: 'login',
+    isLoggedIn: false,
+    userRole: 'RESIDENT',
+    loginEmail: '',
+    loginPassword: '',
+    loginLoading: false,
+    loginError: '',
+    noticeFilter: '전체',
+    selectedNoticeId: null,
+    suggestionFilter: '전체',
+    selectedSuggestionId: null,
+    newTitle: '',
+    newContent: '',
+    newCategory: '시설',
+    newPublic: false,
+    newSubmitted: false,
+    parkingApplied: false,
+  };
+
+  componentDidMount() {
+    const view = this.props.initialView ?? 'login';
+    const role = this.props.userRole ?? 'RESIDENT';
+    if (view !== 'login') {
+      this.setState({ screen: view, isLoggedIn: true, userRole: role });
+    }
+  }
+
+  scrollTop() {
+    try { window.scrollTo(0, 0); } catch(e) {}
+    try { const el = document.querySelector('[data-content-area]'); if (el) el.scrollTop = 0; } catch(e) {}
+  }
+
+  navigate(screen) {
+    this.setState({ screen });
+    this.scrollTop();
+  }
+
+  doLogin(email, password) {
+    if (!email || !password) { this.setState({ loginError: '이메일과 비밀번호를 입력해 주세요.' }); return; }
+    this.setState({ loginLoading: true, loginError: '' });
+    setTimeout(() => {
+      const isAdmin = email.includes('admin') || email.startsWith('manager');
+      this.setState({ loginLoading: false, isLoggedIn: true, userRole: isAdmin ? 'ADMIN' : 'RESIDENT', screen: isAdmin ? 'admin' : 'home' });
+    }, 800);
+  }
+
+  renderVals() {
+    const s = this.state;
+    const isAdmin = s.userRole === 'ADMIN';
+
+    const navHomeActive = s.screen === 'home';
+    const navNoticeActive = s.screen === 'notices' || s.screen === 'noticeDetail';
+    const navSuggestActive = ['suggestions','newSuggestion','suggestionDetail'].includes(s.screen);
+    const navParkingActive = s.screen === 'parking';
+    const navMyActive = s.screen === 'mypage';
+    const navAdminActive = s.screen === 'admin';
+
+    const ni = (a) => ({
+      bg: a ? '#EFF6FF' : 'transparent',
+      color: a ? '#1D4ED8' : '#6B7280',
+      fw: a ? 600 : 500,
+    });
+
+    const niH = ni(navHomeActive), niN = ni(navNoticeActive), niS = ni(navSuggestActive);
+    const niP = ni(navParkingActive), niM = ni(navMyActive), niA = ni(navAdminActive);
+
+    const tab = (active) => ({ bg: active?'#EFF6FF':'transparent', color: active?'#2563EB':'#6B7280', border: active?'#BFDBFE':'#E5E7EB', weight: active?700:400 });
+    const catTab = (active) => ({ bg: active?'#EFF6FF':'#F3F4F6', color: active?'#2563EB':'#6B7280', border: active?'#BFDBFE':'#E5E7EB', weight: active?700:400 });
+
+    const nAll=tab(s.noticeFilter==='전체'), nGen=tab(s.noticeFilter==='일반공지');
+    const nFac=tab(s.noticeFilter==='시설관리'), nLife=tab(s.noticeFilter==='생활안내');
+    const sAll=tab(s.suggestionFilter==='전체'), s1=tab(s.suggestionFilter==='접수');
+    const s2=tab(s.suggestionFilter==='처리중'), s3=tab(s.suggestionFilter==='완료');
+    const c1=catTab(s.newCategory==='시설'), c2=catTab(s.newCategory==='환경');
+    const c3=catTab(s.newCategory==='안전'), c4=catTab(s.newCategory==='편의'), c5=catTab(s.newCategory==='기타');
+
+    const filteredNotices = s.noticeFilter==='전체' ? this.notices : this.notices.filter(n=>n.category===s.noticeFilter);
+    const filteredSuggestions = s.suggestionFilter==='전체' ? this.suggestions : this.suggestions.filter(sg=>sg.status===s.suggestionFilter);
+    const selectedNotice = s.selectedNoticeId ? this.notices.find(n=>n.id===s.selectedNoticeId) : null;
+    const selectedSuggestion = s.selectedSuggestionId ? this.suggestions.find(sg=>sg.id===s.selectedSuggestionId) : null;
+
+    return {
+      showAuthScreen: !s.isLoggedIn,
+      showApp: s.isLoggedIn,
+      showLogin: s.screen==='login',
+      showSignup: s.screen==='signup',
+      showVerify: s.screen==='verify',
+      showHome: s.screen==='home',
+      showNotices: s.screen==='notices',
+      showNoticeDetail: s.screen==='noticeDetail',
+      showSuggestions: s.screen==='suggestions',
+      showNewSuggestion: s.screen==='newSuggestion',
+      showSuggestionDetail: s.screen==='suggestionDetail',
+      showParking: s.screen==='parking',
+      showMyPage: s.screen==='mypage',
+      showAdmin: s.screen==='admin',
+      showFAB: s.screen==='suggestions' && !isAdmin,
+      isAdmin,
+
+      // Sidebar
+      showResidentNav: !isAdmin,
+      showAdminNav: isAdmin,
+      niHBg:niH.bg, niHColor:niH.color, niHFw:niH.fw,
+      niNBg:niN.bg, niNColor:niN.color, niNFw:niN.fw,
+      niSBg:niS.bg, niSColor:niS.color, niSFw:niS.fw,
+      niPBg:niP.bg, niPColor:niP.color, niPFw:niP.fw,
+      niMBg:niM.bg, niMColor:niM.color, niMFw:niM.fw,
+      niABg:niA.bg, niAColor:niA.color, niAFw:niA.fw,
+      sidebarEmail: isAdmin ? 'admin@aitteulak.com' : 'resident@aitteulak.com',
+      sidebarUnit: isAdmin ? '관리사무소' : 'A동 201호',
+      roleBadgeLabel: isAdmin ? '관리자' : '입주민',
+      roleBadgeBg: isAdmin ? '#15803D' : '#2563EB',
+
+      loginEmail: s.loginEmail, loginPassword: s.loginPassword,
+      loginLoading: s.loginLoading, loginNotLoading: !s.loginLoading,
+      loginError: s.loginError, loginErrorVisible: !!s.loginError,
+      loginBtnBg: s.loginLoading ? '#93C5FD' : '#2563EB',
+
+      notices: filteredNotices,
+      pinnedNotices: this.notices.filter(n=>n.pinned),
+      recentNotices: this.notices.slice(0,5),
+      selectedNotice,
+      hasNoticeSelected: !!selectedNotice,
+
+      nAllBg:nAll.bg, nAllColor:nAll.color, nAllBorder:nAll.border, nAllWeight:nAll.weight,
+      nGenBg:nGen.bg, nGenColor:nGen.color, nGenBorder:nGen.border, nGenWeight:nGen.weight,
+      nFacBg:nFac.bg, nFacColor:nFac.color, nFacBorder:nFac.border, nFacWeight:nFac.weight,
+      nLifeBg:nLife.bg, nLifeColor:nLife.color, nLifeBorder:nLife.border, nLifeWeight:nLife.weight,
+
+      suggestions: filteredSuggestions,
+      allSuggestions: this.suggestions,
+      selectedSuggestion,
+      hasSuggestionSelected: !!selectedSuggestion,
+      selectedSuggestionHasReply: !!(selectedSuggestion && selectedSuggestion.hasReply),
+
+      sAllBg:sAll.bg, sAllColor:sAll.color, sAllBorder:sAll.border, sAllWeight:sAll.weight,
+      s1Bg:s1.bg, s1Color:s1.color, s1Border:s1.border, s1Weight:s1.weight,
+      s2Bg:s2.bg, s2Color:s2.color, s2Border:s2.border, s2Weight:s2.weight,
+      s3Bg:s3.bg, s3Color:s3.color, s3Border:s3.border, s3Weight:s3.weight,
+
+      newTitle:s.newTitle, newContent:s.newContent, newCategory:s.newCategory, newPublic:s.newPublic,
+      showNewSuccess: s.newSubmitted,
+      c1Bg:c1.bg, c1Color:c1.color, c1Border:c1.border, c1Weight:c1.weight,
+      c2Bg:c2.bg, c2Color:c2.color, c2Border:c2.border, c2Weight:c2.weight,
+      c3Bg:c3.bg, c3Color:c3.color, c3Border:c3.border, c3Weight:c3.weight,
+      c4Bg:c4.bg, c4Color:c4.color, c4Border:c4.border, c4Weight:c4.weight,
+      c5Bg:c5.bg, c5Color:c5.color, c5Border:c5.border, c5Weight:c5.weight,
+      publicToggleBg: s.newPublic ? '#2563EB' : '#E5E7EB',
+      publicToggleLeft: s.newPublic ? '23px' : '3px',
+
+      parkingApplied: s.parkingApplied,
+      parkingBtnLabel: s.parkingApplied ? '신청 취소' : '신청하기',
+      parkingBtnBg: s.parkingApplied ? '#DC2626' : '#2563EB',
+
+      goLogin: () => this.navigate('login'),
+      goSignup: () => this.navigate('signup'),
+      goVerify: () => this.navigate('verify'),
+      goHome: () => this.navigate('home'),
+      goAdmin: () => this.navigate('admin'),
+      goNotices: () => this.navigate('notices'),
+      goSuggestions: () => this.navigate('suggestions'),
+      goNewSuggestion: () => this.navigate('newSuggestion'),
+      goParking: () => this.navigate('parking'),
+      goMyPage: () => this.navigate(isAdmin ? 'admin' : 'mypage'),
+      goBack: () => {
+        const map = { noticeDetail:'notices', suggestionDetail: isAdmin?'admin':'suggestions', newSuggestion:'suggestions', signup:'login', verify:'login' };
+        this.navigate(map[s.screen] || 'home');
+      },
+      verifyComplete: () => this.setState({ isLoggedIn:true, screen:'home', userRole:'RESIDENT' }),
+      login: () => this.doLogin(s.loginEmail, s.loginPassword),
+      demoLogin: () => this.doLogin('resident@aitteulak.com', 'test1234'),
+      demoAdminLogin: () => this.doLogin('admin@aitteulak.com', 'test1234'),
+      kakaoLogin: () => this.doLogin('kakao@user.com', 'kakao'),
+      logout: () => this.setState({ isLoggedIn:false, screen:'login', loginEmail:'', loginPassword:'' }),
+
+      setLoginEmail: (e) => this.setState({ loginEmail: e.target.value }),
+      setLoginPassword: (e) => this.setState({ loginPassword: e.target.value }),
+      onLoginKeyDown: (e) => { if (e.key==='Enter') this.doLogin(s.loginEmail, s.loginPassword); },
+
+      setNoticeFilter: (e) => this.setState({ noticeFilter: e.currentTarget.dataset.filter }),
+      setSuggestionFilter: (e) => this.setState({ suggestionFilter: e.currentTarget.dataset.filter }),
+
+      openNotice: (e) => { const id=parseInt(e.currentTarget.dataset.id); this.setState({ screen:'noticeDetail', selectedNoticeId:id }); this.scrollTop(); },
+      openSuggestion: (e) => { const id=parseInt(e.currentTarget.dataset.id); this.setState({ screen:'suggestionDetail', selectedSuggestionId:id }); this.scrollTop(); },
+
+      setNewTitle: (e) => this.setState({ newTitle: e.target.value }),
+      setNewContent: (e) => this.setState({ newContent: e.target.value }),
+      setNewPublic: () => this.setState({ newPublic: !s.newPublic }),
+      setNewCategory: (e) => this.setState({ newCategory: e.currentTarget.dataset.cat }),
+      submitSuggestion: () => {
+        if (!s.newTitle.trim() || !s.newContent.trim()) return;
+        this.setState({ newSubmitted: true });
+        setTimeout(() => { this.setState({ newSubmitted:false, newTitle:'', newContent:'', screen:'suggestions' }); }, 1800);
+      },
+      applyParking: () => this.setState({ parkingApplied: !s.parkingApplied }),
+    };
+  }
+}
+</script>
+
+
+</body></html>

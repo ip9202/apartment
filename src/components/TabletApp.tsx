@@ -44,6 +44,9 @@ export default function TabletApp() {
   const [suggestionFilter, setSuggestionFilterState] = useState('전체');
   const [selectedSuggestionId, setSelectedSuggestionId] = useState<number | null>(null);
 
+  // Form validation state
+  const [formError, setFormError] = useState<string | null>(null);
+
   // New suggestion form state
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
@@ -96,8 +99,10 @@ export default function TabletApp() {
    */
   const doLogin = useCallback(async (email: string, password: string) => {
     if (!email || !password) {
-      return; // TODO: 에러 상태 추가
+      setFormError('이메일과 비밀번호를 모두 입력해 주세요.');
+      return;
     }
+    setFormError(null);
     await login(email, password);
 
     // 로그인 성공 후 화면 전환 (useAuth 상태로 판단)
@@ -112,8 +117,14 @@ export default function TabletApp() {
    */
   const doSignup = useCallback(async () => {
     if (!signupEmail || !signupPassword || !signupName) {
-      return; // TODO: 에러 상태 추가
+      setFormError('모든 필드를 입력해 주세요.');
+      return;
     }
+    if (signupPassword.length < 8) {
+      setFormError('비밀번호는 8자 이상이어야 합니다.');
+      return;
+    }
+    setFormError(null);
     await signup(signupEmail, signupPassword, signupName);
 
     // 회원가입 성공 후 verify 화면 이동
@@ -127,8 +138,10 @@ export default function TabletApp() {
    */
   const doVerifyUnit = useCallback(async () => {
     if (!verifyBuilding || !verifyUnitNumber) {
-      return; // TODO: 에러 상태 추가
+      setFormError('동과 호수를 모두 선택해 주세요.');
+      return;
     }
+    setFormError(null);
     await verifyUnit(verifyBuilding, verifyUnitNumber);
 
     // 인증 성공 후 홈 화면 이동
@@ -372,6 +385,20 @@ export default function TabletApp() {
                       />
                     </div>
                   </div>
+                  {formError && (
+                    <div style={{
+                      padding: "10px 14px",
+                      backgroundColor: "#FEF2F2",
+                      borderRadius: "8px",
+                      marginBottom: "12px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}>
+                      <span style={{ fontSize: "15px" }}>⚠️</span>
+                      <span style={{ fontSize: "13px", color: "#DC2626" }}>{formError}</span>
+                    </div>
+                  )}
                   {state.error && (
                     <div style={{
                       padding: "10px 14px",
@@ -2502,7 +2529,7 @@ export default function TabletApp() {
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
-                          cursor: pointer
+                          cursor: "pointer" as const
                         }}>
                           <span style={{ fontSize: "14px", color: "#374151" }}>개인정보 처리방침</span>
                           <svg width="7" height="12" viewBox="0 0 7 12" fill="none">

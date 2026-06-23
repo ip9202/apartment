@@ -1,5 +1,6 @@
 import { config } from 'dotenv';
 import { resolve } from 'node:path';
+import '@testing-library/jest-dom';
 
 // 테스트 실행 전 .env.local 로드 — src/lib/env.ts 의 fail-fast 검증이 통과하도록 보장.
 config({ path: resolve(process.cwd(), '.env.local') });

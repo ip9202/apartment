@@ -1,42 +1,87 @@
 "use client";
 
 import { useState, useCallback } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import type { Screen } from './demo-data';
 
 /**
  * MobileApp - Mobile viewport component
  * ONLY renders login/signup/verify screens
  * For other screens, use TabletApp instead
+ *
+ * REQ-AUTH-INT-014: 하드코딩 제거 및 useAuth 연동
+ * REQ-AUTH-INT-015: login 화면 API 연동
+ * REQ-AUTH-INT-016: signup 화면 API 연동
+ * REQ-AUTH-INT-017: verify-unit 화면 API 연동
+ *
+ * @MX:ANCHOR: [AUTO] 모바일 인증 화면의 단일 진입점 — fan_in >= 3 (메인 레이아웃)
+ * @MX:REASON: 이 컴포넌트를 통해 모바일 인증 플로우가 제어되며, 변경 시 login/signup/verify 화면 전체에 영향.
  */
 export default function MobileApp() {
+  const { state, login, signup, verifyUnit } = useAuth();
+
   // State
   const [screen, setScreen] = useState<Screen>('login');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
 
-  const navigate = useCallback((newScreen: Screen) => {
-    setScreen(newScreen);
-  }, []);
+  // Signup form state
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupName, setSignupName] = useState('');
 
-  const doLogin = useCallback((email: string, password: string) => {
+  // Verify unit form state
+  const [verifyBuilding, setVerifyBuilding] = useState('');
+  const [verifyUnitNumber, setVerifyUnitNumber] = useState('');
+
+  /**
+   * 로그인 처리 (REQ-AUTH-INT-015)
+   * useAuth.login 호출 → 성공 시 홈 화면 이동
+   */
+  const doLogin = useCallback(async (email: string, password: string) => {
     if (!email || !password) {
-      setLoginError('이메일과 비밀번호를 입력해 주세요.');
-      return;
+      return; // TODO: 에러 상태 추가
     }
-    setLoginLoading(true);
-    setLoginError('');
-    setTimeout(() => {
-      setLoginLoading(false);
-      setIsLoggedIn(true);
-      const isAdmin = email.includes('admin') || email.startsWith('manager');
+    await login(email, password);
+
+    // 로그인 성공 후 화면 전환 (useAuth 상태로 판단)
+    if (state.user) {
+      const isAdmin = state.user.role === 'ADMIN';
       setScreen(isAdmin ? 'admin' : 'home');
-    }, 800);
-  }, []);
+    }
+  }, [login, state.user]);
+
+  /**
+   * 회원가입 처리 (REQ-AUTH-INT-016)
+   */
+  const doSignup = useCallback(async () => {
+    if (!signupEmail || !signupPassword || !signupName) {
+      return; // TODO: 에러 상태 추가
+    }
+    await signup(signupEmail, signupPassword, signupName);
+
+    // 회원가입 성공 후 verify 화면 이동
+    if (state.user) {
+      setScreen('verify');
+    }
+  }, [signup, signupEmail, signupPassword, signupName, state.user]);
+
+  /**
+   * 동호수 인증 처리 (REQ-AUTH-INT-017)
+   */
+  const doVerifyUnit = useCallback(async () => {
+    if (!verifyBuilding || !verifyUnitNumber) {
+      return; // TODO: 에러 상태 추가
+    }
+    await verifyUnit(verifyBuilding, verifyUnitNumber);
+
+    // 인증 성공 후 홈 화면 이동
+    if (state.user?.verified) {
+      setScreen('home');
+    }
+  }, [verifyUnit, verifyBuilding, verifyUnitNumber, state.user]);
 
   const goBack = useCallback(() => {
     if (screen === 'signup' || screen === 'verify') {
@@ -114,7 +159,7 @@ export default function MobileApp() {
         </div>
 
         {/* AUTH SCREENS */}
-        {!isLoggedIn && (
+        {!state.user && (
           <div style={{ flex: 1, overflowY: "auto", backgroundColor: "white" }}>
 
             {/* LOGIN */}
@@ -226,7 +271,7 @@ export default function MobileApp() {
                     />
                   </div>
                 </div>
-                {loginError && (
+                {state.error && (
                   <div style={{
                     padding: "10px 14px",
                     backgroundColor: "#FEF2F2",
@@ -237,7 +282,7 @@ export default function MobileApp() {
                     gap: "8px"
                   }}>
                     <span style={{ fontSize: "15px" }}>⚠️</span>
-                    <span style={{ fontSize: "13px", color: "#DC2626" }}>{loginError}</span>
+                    <span style={{ fontSize: "13px", color: "#DC2626" }}>{state.error}</span>
                   </div>
                 )}
                 <button
@@ -245,7 +290,7 @@ export default function MobileApp() {
                   style={{
                     width: "100%",
                     height: "52px",
-                    backgroundColor: loginLoading ? "#93C5FD" : "#2563EB",
+                    backgroundColor: state.loading ? "#93C5FD" : "#2563EB",
                     color: "white",
                     border: "none",
                     borderRadius: "12px",
@@ -260,7 +305,7 @@ export default function MobileApp() {
                     letterSpacing: "-0.2px"
                   }}
                 >
-                  {loginLoading ? (
+                  {state.loading ? (
                     <span style={{
                       width: "18px",
                       height: "18px",
@@ -284,93 +329,6 @@ export default function MobileApp() {
                     style={{ color: "#2563EB", fontWeight: 600, cursor: "pointer" }}
                   >회원가입</span>
                 </p>
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  marginBottom: "14px"
-                }}>
-                  <div style={{ flex: 1, height: "1px", backgroundColor: "#F3F4F6" }}></div>
-                  <span style={{
-                    fontSize: "11px",
-                    color: "#D1D5DB",
-                    fontWeight: 600,
-                    letterSpacing: "0.6px",
-                    textTransform: "uppercase"
-                  }}>소셜 로그인</span>
-                  <div style={{ flex: 1, height: "1px", backgroundColor: "#F3F4F6" }}></div>
-                </div>
-                <button
-                  onClick={() => doLogin('kakao@user.com', 'kakao')}
-                  style={{
-                    width: "100%",
-                    height: "50px",
-                    backgroundColor: "#FEE500",
-                    color: "rgba(0,0,0,0.85)",
-                    border: "none",
-                    borderRadius: "11px",
-                    fontSize: "15px",
-                    fontWeight: 700,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    marginBottom: "14px",
-                    letterSpacing: "-0.3px"
-                  }}
-                >
-                  <svg width="19" height="19" viewBox="0 0 24 24" fill="rgba(0,0,0,0.85)">
-                    <path d="M12 3C6.48 3 2 6.92 2 11.75c0 2.99 1.71 5.63 4.31 7.27L5.2 22.38a.5.5 0 0 0 .74.55l4.38-2.94c.55.07 1.1.11 1.68.11 5.52 0 10-3.92 10-8.75C22 6.92 17.52 3 12 3z"></path>
-                  </svg>
-                  카카오로 시작하기
-                </button>
-                <div style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  marginBottom: "14px"
-                }}>
-                  <div style={{ flex: 1, height: "1px", backgroundColor: "#F3F4F6" }}></div>
-                  <span style={{
-                    fontSize: "11px",
-                    color: "#D1D5DB",
-                    fontWeight: 600,
-                    letterSpacing: "0.5px",
-                    textTransform: "uppercase"
-                  }}>체험하기</span>
-                  <div style={{ flex: 1, height: "1px", backgroundColor: "#F3F4F6" }}></div>
-                </div>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <button
-                    onClick={() => doLogin('resident@apt.com', 'demo')}
-                    style={{
-                      flex: 1,
-                      height: "44px",
-                      backgroundColor: "#EFF6FF",
-                      color: "#1D4ED8",
-                      border: "1.5px solid #BFDBFE",
-                      borderRadius: "10px",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      cursor: "pointer"
-                    }}
-                  >👤 입주민</button>
-                  <button
-                    onClick={() => doLogin('admin@apt.com', 'admin')}
-                    style={{
-                      flex: 1,
-                      height: "44px",
-                      backgroundColor: "#F0FDF4",
-                      color: "#15803D",
-                      border: "1.5px solid #BBF7D0",
-                      borderRadius: "10px",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      cursor: "pointer"
-                    }}
-                  >🔧 관리자</button>
-                </div>
               </div>
             )}
 
@@ -429,7 +387,37 @@ export default function MobileApp() {
                     }}>이메일</label>
                     <input
                       type="email"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
                       placeholder="이메일을 입력해 주세요"
+                      style={{
+                        width: "100%",
+                        height: "50px",
+                        border: "1.5px solid #E5E7EB",
+                        borderRadius: "10px",
+                        padding: "0 16px",
+                        fontSize: "15px",
+                        color: "#111827",
+                        outline: "none",
+                        backgroundColor: "#F9FAFB"
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{
+                      fontSize: "12px",
+                      fontWeight: 700,
+                      color: "#374151",
+                      display: "block",
+                      marginBottom: "7px",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
+                    }}>이름</label>
+                    <input
+                      type="text"
+                      value={signupName}
+                      onChange={(e) => setSignupName(e.target.value)}
+                      placeholder="이름을 입력해 주세요"
                       style={{
                         width: "100%",
                         height: "50px",
@@ -455,33 +443,9 @@ export default function MobileApp() {
                     }}>비밀번호</label>
                     <input
                       type="password"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
                       placeholder="8자 이상, 영문+숫자 조합"
-                      style={{
-                        width: "100%",
-                        height: "50px",
-                        border: "1.5px solid #E5E7EB",
-                        borderRadius: "10px",
-                        padding: "0 16px",
-                        fontSize: "15px",
-                        color: "#111827",
-                        outline: "none",
-                        backgroundColor: "#F9FAFB"
-                      }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{
-                      fontSize: "12px",
-                      fontWeight: 700,
-                      color: "#374151",
-                      display: "block",
-                      marginBottom: "7px",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px"
-                    }}>비밀번호 확인</label>
-                    <input
-                      type="password"
-                      placeholder="비밀번호를 다시 입력해 주세요"
                       style={{
                         width: "100%",
                         height: "50px",
@@ -553,11 +517,12 @@ export default function MobileApp() {
                     </div>
                   </div>
                   <button
-                    onClick={() => setScreen('verify')}
+                    onClick={() => doSignup()}
+                    disabled={state.loading}
                     style={{
                       width: "100%",
                       height: "52px",
-                      backgroundColor: "#2563EB",
+                      backgroundColor: state.loading ? "#93C5FD" : "#2563EB",
                       color: "white",
                       border: "none",
                       borderRadius: "12px",
@@ -566,7 +531,7 @@ export default function MobileApp() {
                       cursor: "pointer",
                       letterSpacing: "-0.2px"
                     }}
-                  >회원가입</button>
+                  >{state.loading ? '가입 중...' : '회원가입'}</button>
                   <p style={{
                     textAlign: "center",
                     fontSize: "14px",
@@ -652,20 +617,24 @@ export default function MobileApp() {
                         textTransform: "uppercase",
                         letterSpacing: "0.5px"
                       }}>동 선택</label>
-                      <select style={{
-                        width: "100%",
-                        height: "50px",
-                        border: "1.5px solid #E5E7EB",
-                        borderRadius: "10px",
-                        padding: "0 16px",
-                        fontSize: "15px",
-                        color: "#111827",
-                        outline: "none",
-                        backgroundColor: "#F9FAFB",
-                        cursor: "pointer",
-                        appearance: "none",
-                        WebkitAppearance: "none"
-                      }}>
+                      <select
+                        value={verifyBuilding}
+                        onChange={(e) => setVerifyBuilding(e.target.value)}
+                        style={{
+                          width: "100%",
+                          height: "50px",
+                          border: "1.5px solid #E5E7EB",
+                          borderRadius: "10px",
+                          padding: "0 16px",
+                          fontSize: "15px",
+                          color: "#111827",
+                          outline: "none",
+                          backgroundColor: "#F9FAFB",
+                          cursor: "pointer",
+                          appearance: "none",
+                          WebkitAppearance: "none"
+                        }}
+                      >
                         <option value="">동을 선택해 주세요</option>
                         <option value="A">A동</option>
                         <option value="B">B동</option>
@@ -681,20 +650,24 @@ export default function MobileApp() {
                         textTransform: "uppercase",
                         letterSpacing: "0.5px"
                       }}>호수 선택</label>
-                      <select style={{
-                        width: "100%",
-                        height: "50px",
-                        border: "1.5px solid #E5E7EB",
-                        borderRadius: "10px",
-                        padding: "0 16px",
-                        fontSize: "15px",
-                        color: "#111827",
-                        outline: "none",
-                        backgroundColor: "#F9FAFB",
-                        cursor: "pointer",
-                        appearance: "none",
-                        WebkitAppearance: "none"
-                      }}>
+                      <select
+                        value={verifyUnitNumber}
+                        onChange={(e) => setVerifyUnitNumber(e.target.value)}
+                        style={{
+                          width: "100%",
+                          height: "50px",
+                          border: "1.5px solid #E5E7EB",
+                          borderRadius: "10px",
+                          padding: "0 16px",
+                          fontSize: "15px",
+                          color: "#111827",
+                          outline: "none",
+                          backgroundColor: "#F9FAFB",
+                          cursor: "pointer",
+                          appearance: "none",
+                          WebkitAppearance: "none"
+                        }}
+                      >
                         <option value="">호수를 선택해 주세요</option>
                         <option>101호</option>
                         <option>102호</option>
@@ -712,14 +685,12 @@ export default function MobileApp() {
                     </div>
                   </div>
                   <button
-                    onClick={() => {
-                      setIsLoggedIn(true);
-                      setScreen('home');
-                    }}
+                    onClick={() => doVerifyUnit()}
+                    disabled={state.loading}
                     style={{
                       width: "100%",
                       height: "52px",
-                      backgroundColor: "#2563EB",
+                      backgroundColor: state.loading ? "#93C5FD" : "#2563EB",
                       color: "white",
                       border: "none",
                       borderRadius: "12px",
@@ -728,7 +699,7 @@ export default function MobileApp() {
                       cursor: "pointer",
                       letterSpacing: "-0.2px"
                     }}
-                  >인증하기</button>
+                  >{state.loading ? '인증 중...' : '인증하기'}</button>
                 </div>
               </div>
             )}
@@ -737,7 +708,7 @@ export default function MobileApp() {
         )}
 
         {/* If logged in, show message - should use TabletApp instead */}
-        {isLoggedIn && (
+        {state.user && (
           <div style={{
             flex: 1,
             display: "flex",

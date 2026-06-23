@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { NOTICES, SUGGESTIONS, getTimelineColors, getTabStyles, getCatTabStyles, type Screen } from './demo-data';
+import { NOTICES, type Screen } from './demo-data';
 
 /**
  * DesktopApp - Desktop viewport component
@@ -36,23 +36,8 @@ export default function DesktopApp() {
   const [verifyBuilding, setVerifyBuilding] = useState('');
   const [verifyUnitNumber, setVerifyUnitNumber] = useState('');
 
-  // Notice filter state
-  const [noticeFilter, setNoticeFilterState] = useState('전체');
-  const [selectedNoticeId, setSelectedNoticeId] = useState<number | null>(null);
-
-  // Suggestion filter state
-  const [suggestionFilter, setSuggestionFilterState] = useState('전체');
-  const [selectedSuggestionId, setSelectedSuggestionId] = useState<number | null>(null);
-
-  // New suggestion form state
-  const [newTitle, setNewTitle] = useState('');
-  const [newContent, setNewContent] = useState('');
-  const [newCategory, setNewCategory] = useState('시설');
-  const [newPublic, setNewPublic] = useState(false);
-  const [newSubmitted, setNewSubmitted] = useState(false);
-
-  // Parking state
-  const [parkingApplied, setParkingApplied] = useState(false);
+  // Form validation state
+  const [formError, setFormError] = useState<string | null>(null);
 
   // Computed values
   const isAdmin = state.user?.role === 'ADMIN';
@@ -61,36 +46,6 @@ export default function DesktopApp() {
   const showLogin = screen === 'login';
   const showSignup = screen === 'signup';
   const showVerify = screen === 'verify';
-
-  const nAll = getTabStyles(noticeFilter === '전체');
-  const nGen = getTabStyles(noticeFilter === '일반공지');
-  const nFac = getTabStyles(noticeFilter === '시설관리');
-  const nLife = getTabStyles(noticeFilter === '생활안내');
-
-  const sAll = getTabStyles(suggestionFilter === '전체');
-  const s1 = getTabStyles(suggestionFilter === '접수');
-  const s2 = getTabStyles(suggestionFilter === '처리중');
-  const s3 = getTabStyles(suggestionFilter === '완료');
-
-  const c1 = getCatTabStyles(newCategory === '시설');
-  const c2 = getCatTabStyles(newCategory === '환경');
-  const c3 = getCatTabStyles(newCategory === '안전');
-  const c4 = getCatTabStyles(newCategory === '편의');
-  const c5 = getCatTabStyles(newCategory === '기타');
-
-  const publicToggleBg = newPublic ? '#2563EB' : '#E5E7EB';
-  const publicToggleLeft = newPublic ? '23px' : '3px';
-
-  const parkingBtnBg = parkingApplied ? '#DC2626' : '#2563EB';
-  const parkingBtnLabel = parkingApplied ? '신청 취소' : '신청하기';
-
-  const filteredNotices = noticeFilter === '전체' ? NOTICES : NOTICES.filter(n => n.category === noticeFilter);
-  const filteredSuggestions = suggestionFilter === '전체' ? SUGGESTIONS : SUGGESTIONS.filter(s => s.status === suggestionFilter);
-  const selectedNotice = selectedNoticeId ? NOTICES.find(n => n.id === selectedNoticeId) : null;
-  const selectedSuggestion = selectedSuggestionId ? SUGGESTIONS.find(s => s.id === selectedSuggestionId) : null;
-
-  const sidebarEmail = isAdmin ? 'admin@aitteulak.com' : 'resident@aitteulak.com';
-  const sidebarUnit = isAdmin ? '관리사무소' : 'A동 201호';
 
   // Navigation handlers
   const navigate = useCallback((newScreen: Screen) => {
@@ -104,8 +59,10 @@ export default function DesktopApp() {
    */
   const doLogin = useCallback(async (email: string, password: string) => {
     if (!email || !password) {
-      return; // TODO: 에러 상태 추가
+      setFormError('이메일과 비밀번호를 모두 입력해 주세요.');
+      return;
     }
+    setFormError(null);
     await login(email, password);
 
     // 로그인 성공 후 화면 전환 (useAuth 상태로 판단)
@@ -120,8 +77,14 @@ export default function DesktopApp() {
    */
   const doSignup = useCallback(async () => {
     if (!signupEmail || !signupPassword || !signupName) {
-      return; // TODO: 에러 상태 추가
+      setFormError('모든 필드를 입력해 주세요.');
+      return;
     }
+    if (signupPassword.length < 8) {
+      setFormError('비밀번호는 8자 이상이어야 합니다.');
+      return;
+    }
+    setFormError(null);
     await signup(signupEmail, signupPassword, signupName);
 
     // 회원가입 성공 후 verify 화면 이동
@@ -135,8 +98,10 @@ export default function DesktopApp() {
    */
   const doVerifyUnit = useCallback(async () => {
     if (!verifyBuilding || !verifyUnitNumber) {
-      return; // TODO: 에러 상태 추가
+      setFormError('동과 호수를 모두 선택해 주세요.');
+      return;
     }
+    setFormError(null);
     await verifyUnit(verifyBuilding, verifyUnitNumber);
 
     // 인증 성공 후 홈 화면 이동
@@ -144,33 +109,6 @@ export default function DesktopApp() {
       setScreen('home');
     }
   }, [verifyUnit, verifyBuilding, verifyUnitNumber, state.user]);
-
-  const handleSetNoticeFilter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const filter = (e.currentTarget as HTMLDivElement).dataset.filter || '전체';
-    setNoticeFilterState(filter);
-    setSelectedNoticeId(null);
-  }, []);
-
-  const handleSetSuggestionFilter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const filter = (e.currentTarget as HTMLDivElement).dataset.filter || '전체';
-    setSuggestionFilterState(filter);
-    setSelectedSuggestionId(null);
-  }, []);
-
-  const handleSubmitSuggestion = useCallback(() => {
-    if (newTitle.trim() && newContent.trim()) {
-      setNewSubmitted(true);
-      setTimeout(() => setNewSubmitted(false), 3000);
-      setNewTitle('');
-      setNewContent('');
-      setNewCategory('시설');
-      setNewPublic(false);
-    }
-  }, [newTitle, newContent]);
-
-  const handleToggleParking = useCallback(() => {
-    setParkingApplied(prev => !prev);
-  }, []);
 
   return (
     <div style={{ display: 'flex', height: '100vh', backgroundColor: '#F3F4F6' }}>
@@ -509,6 +447,21 @@ export default function DesktopApp() {
                     />
                   </div>
 
+                  {formError && (
+                    <div style={{
+                      padding: '10px 14px',
+                      backgroundColor: '#FEF2F2',
+                      border: '1px solid #FECACA',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '12px'
+                    }}>
+                      <span style={{ fontSize: '15px' }}>⚠️</span>
+                      <span style={{ fontSize: '13px', color: '#DC2626' }}>{formError}</span>
+                    </div>
+                  )}
                   {state.error && (
                     <div style={{
                       padding: '10px 14px',
@@ -568,8 +521,7 @@ export default function DesktopApp() {
                         fontSize: '13px',
                         fontWeight: 700,
                         cursor: 'pointer'
-                      }}
-                    >👤 입주민</button>
+                      }}>👤 입주민</button>
                     <button
                       onClick={() => doLogin('admin@aitteulak.com', 'test1234')}
                       style={{
@@ -581,8 +533,7 @@ export default function DesktopApp() {
                         fontSize: '13px',
                         fontWeight: 700,
                         cursor: 'pointer'
-                      }}
-                    >🔧 관리자</button>
+                      }}>🔧 관리자</button>
                   </div>
                 </div>
 
@@ -703,6 +654,36 @@ export default function DesktopApp() {
                       }}
                     />
                   </div>
+
+                  {formError && (
+                    <div style={{
+                      padding: '10px 14px',
+                      backgroundColor: '#FEF2F2',
+                      border: '1px solid #FECACA',
+                      borderRadius: '8px',
+                      marginBottom: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <span style={{ fontSize: '15px' }}>⚠️</span>
+                      <span style={{ fontSize: '13px', color: '#DC2626' }}>{formError}</span>
+                    </div>
+                  )}
+                  {state.error && (
+                    <div style={{
+                      padding: '10px 14px',
+                      backgroundColor: '#FEF2F2',
+                      border: '1px solid #FECACA',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <span style={{ fontSize: '15px' }}>⚠️</span>
+                      <span style={{ fontSize: '13px', color: '#DC2626' }}>{state.error}</span>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => doSignup()}
@@ -834,6 +815,36 @@ export default function DesktopApp() {
                     </select>
                   </div>
 
+                  {formError && (
+                    <div style={{
+                      padding: '10px 14px',
+                      backgroundColor: '#FEF2F2',
+                      border: '1px solid #FECACA',
+                      borderRadius: '8px',
+                      marginBottom: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <span style={{ fontSize: '15px' }}>⚠️</span>
+                      <span style={{ fontSize: '13px', color: '#DC2626' }}>{formError}</span>
+                    </div>
+                  )}
+                  {state.error && (
+                    <div style={{
+                      padding: '10px 14px',
+                      backgroundColor: '#FEF2F2',
+                      border: '1px solid #FECACA',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <span style={{ fontSize: '15px' }}>⚠️</span>
+                      <span style={{ fontSize: '13px', color: '#DC2626' }}>{state.error}</span>
+                    </div>
+                  )}
+
                   <button
                     onClick={() => doVerifyUnit()}
                     disabled={state.loading}
@@ -894,9 +905,8 @@ export default function DesktopApp() {
             </div>
           </div>
 
-          {/* Content Area - MobileApp의 내용을 그대로 사용 */}
+          {/* Content Area - Placeholder */}
           <div style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
-            {/* 각 screen에 따른 렌더링은 MobileApp과 동일하게 구현 */}
             <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
               {/* HOME SCREEN */}
               {screen === 'home' && (
@@ -1011,17 +1021,13 @@ export default function DesktopApp() {
                       {NOTICES.slice(0, 3).map(notice => (
                         <div
                           key={notice.id}
-                          onClick={() => {
-                            setSelectedNoticeId(notice.id);
-                            navigate('noticeDetail');
-                          }}
                           style={{
                             backgroundColor: 'white',
                             borderRadius: '10px',
                             padding: '16px',
                             cursor: 'pointer',
                             boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                            borderLeft: `4px solid ${getTimelineColors(notice.category)}`
+                            borderLeft: `4px solid ${notice.category === '일반공지' ? '#3B82F6' : notice.category === '시설관리' ? '#F59E0B' : '#10B981'}`
                           }}
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>

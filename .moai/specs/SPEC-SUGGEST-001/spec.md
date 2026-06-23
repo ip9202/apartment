@@ -1,9 +1,9 @@
 ---
 id: "SPEC-SUGGEST-001"
-version: "1.0.0"
-status: "draft"
+version: "1.1.0"
+status: "Complete"
 created: "2026-06-22"
-updated: "2026-06-22"
+updated: "2026-06-23"
 author: "강력쇠주먹"
 priority: "P0"
 issue_number: 0
@@ -17,6 +17,7 @@ issue_number: 0
 
 ## HISTORY
 
+- **2026-06-23**: 문서 동기화 완료 (강력쇠주먹). 실제 구현된 건의 API 내용 반영. 상태를 "draft"에서 "Complete"로 변경. 모든 SUGGEST 엔드포인트(SUGGEST-01~12) 구현 완료 확인.
 - **2026-06-22**: 최초 작성 (강력쇠주먹). 확정 결정 5종 반영: (1) **범위 = FULL P0** — 등록(공개/비공개)·수정(본인)·아카이브(작성자+ADMIN)·열람(역할별 비공개 분기)·호수별 이력(ADMIN/CHAIR)·답변(ADMIN)·상태 전이(접수→처리중→완료→보류, 재오픈)까지 단일 SPEC. (2) **카테고리 = 고정 시드 + ALTER 확장** — `suggestion_categories` 4종 고정 시드(시설/주차/소음/기타). 동적 카테고리 CRUD(SUGGEST-13)는 OUT. (3) **테이블 전략 = 기존 004 ALTER + 신규 테이블** — 기존 `migrations/004_suggestions_minimal.sql`(AUTH 사이드이펙트용 최소 스키마)을 migration 007(`ALTER TABLE`)로 컬럼 7종 추가(category_id, title, content, is_public, status, updated_at, archived_at). 기존 004 컬럼(id, author_id, author_label, archived, unit_id, created_at) 및 데이터 보존. `suggestion_categories` + `suggestion_replies` 신규 테이블도 migration 007에 함께 생성. (4) **첨부파일 = 완전 제외** — NOTICE-001과 동일 정책, 별도 ADR/SPEC으로 이연. (5) **영구 삭제 금지 (archive-only)** — ADR-005 호수 귀속 정책 준거. DELETE 엔드포인트는 archived=true 전환(작성자 익명화: author_id=NULL, author_label="전 입주민", unit_id 보존)이며 행 삭제가 아님.
 
 ---

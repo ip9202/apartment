@@ -1,9 +1,9 @@
 ---
 id: "SPEC-NOTICE-001"
 version: "1.0.0"
-status: "draft"
+status: "Complete"
 created: "2026-06-22"
-updated: "2026-06-22"
+updated: "2026-06-23"
 author: "강력쇠주먹"
 priority: "P0"
 issue_number: 0
@@ -17,6 +17,7 @@ issue_number: 0
 
 ## HISTORY
 
+- **2026-06-23**: 구현 완료 및 문서 동기화 (강력쇠주먹). P0 범위 전체 구현 완료: NOTICE-01(공지 등록), NOTICE-02(공지 수정), NOTICE-03(공지 삭제), NOTICE-04(공지 목록 열람), NOTICE-05(공지 상세 열람). Migration 006(notices/notice_categories 테이블) 적용 완료. RBAC 패턴 재사용(requireAdmin, verifyAccessToken). 테스트 커버리지 93.45% 달성(333/333 통과). TRUST 5 품질 게이트 전달. 상태를 "draft"에서 "Complete"로 변경.
 - **2026-06-22**: 최초 작성 (강력쇠주먹). 확정 결정 4종 반영: (1) 범위 = P0 ONLY(등록/수정/삭제 ADMIN + 목록/상세 열람 전체 인증 사용자), (2) 카테고리 = 고정 enum 시드(notice_categories 테이블 seed, 일반/긴급/주차/시설), 동적 카테고리 CRUD(NOTICE-07)는 OUT, (3) 첨부파일(attachments) = 본 SPEC에서 완전 제외 — 공지는 제목+카테고리+내용(텍스트)만, 파일 저장소 백엔드 결정은 별도 ADR/SPEC으로 이연, (4) is_pinned(상단 고정) = 본 SPEC에서 API 동작 제외(P1, 별도 SPEC) — 단 ERD 전방 호환성을 위해 notices 테이블에 is_pinned 컬럼은 존재하며, 본 SPEC은 이 컬럼에 대한 어떠한 API 동작도 노출하지 않는다(디폴트 false 로 저장만 됨). 공지 삭제는 영구 삭제(hard delete) — 기획서(기능명세서/PRD)에 명시된 바에 따름.
 
 ---

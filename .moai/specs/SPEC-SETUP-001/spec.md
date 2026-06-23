@@ -1,9 +1,9 @@
 ---
 id: "SPEC-SETUP-001"
 version: "1.0.0"
-status: "draft"
+status: "Complete"
 created: "2026-06-21"
-updated: "2026-06-21"
+updated: "2026-06-23"
 author: "강력쇠주먹"
 priority: "P0"
 issue_number: 0
@@ -18,6 +18,8 @@ issue_number: 0
 ## HISTORY
 
 - **2026-06-21**: 최초 작성 (강력쇠주먹). Phase 0.5 Deep Research(`research.md` 522 라인) 완료 후 Plan Review 게이트 통과. 확정 결정 4종 반영: (1) 강제 탈퇴 → AUTH 위임(SETUP 미구현, `DELETE /api/setup/users/:id`는 AUTH `/api/auth/users/[id]/deactivate` 호출), (2) SETUP-03 직책 종류 CRUD OUT(P1 별도 SPEC), 역할 5종(ADMIN/CHAIR/REP/AUDITOR/RESIDENT) 고정, (3) CHAIR 직책 부여 권한 = RESIDENT/REP/AUDITOR 한정(ADMIN 부여 시 403), (4) `GET /api/setup/buildings` 공개 처리(middleware matcher 예외, 인증 목적 비인증 허용).
+- **2026-06-22**: P0 구현 완료 (강력쇠주먹). develop 브랜치에 병합됨 (커밋 bb7b3f4). 모든 기능 요구사항(REQ-SETUP-001 ~ REQ-SETUP-020) 구현 완료. 테스트 커버리지 290/290 통과.
+- **2026-06-23**: 문서 동기화 완료 (강력쇠주먹). 실제 구현된 내용을 SPEC 문서에 반영. README.md에 SETUP 도메인 API 엔드포인트 추가 완료.
 
 ---
 

@@ -1,9 +1,9 @@
 ---
 id: "SPEC-AUTH-001"
-version: "1.1.0"
-status: "draft"
+version: "1.2.0"
+status: "Complete"
 created: "2026-06-21"
-updated: "2026-06-21"
+updated: "2026-06-23"
 author: "강력쇠주먹"
 priority: "P0"
 issue_number: 0
@@ -19,6 +19,7 @@ issue_number: 0
 
 - **2026-06-21**: 최초 작성 (강력쇠주먹). Phase 0.5 Deep Research 완료 후 Plan Review 게이트 통과. 확정 결정 3종 반영: (1) AUTH-07 API 소유권 AUTH 도메인 귀속, (2) RT 블랙리스트 DB 테이블 도입, (3) Rate Limiting DB 기반 구현.
 - **2026-06-21 (rev 1.1.0)**: plan-auditor iteration 1 MAJOR 5건 해소. (1) REQ-AUTH-016 신설 — 비-ADMIN 강제 탈퇴 RBAC 403 (AC-AUTH-023 추적); (2) REQ-AUTH-010a 신설 — 미존재 building/unit → 422 (AC-AUTH-017 추적); (3) REQ-AUTH-011/AC-015를 `users.managed_building_id` 기반으로 변경 + SETUP 마이그레이션 cross-SPEC 의존성 명시; (4) AC-AUTH-027/028/029 신설 — JWT alg/exp 디코딩 및 RT 쿠키 속성 검증; (5) §2.1 suggestions 사이드이펙트 명시 + Exclusion #5 축소 (ADR-005 호수 귀속 정책).
+- **2026-06-23 (rev 1.2.0)**: 구현 완료 및 문서 동기화. AUTH-01/03/04/07 및 M3(Refresh) 구현 완료. 모든 P0 범위 기능 구현되고 테스트 통과. JWT 환경변수 로드 적용. README.md에 AUTH 도메인 API 문서 추가.
 
 ---
 

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- 비밀번호 재설정 기능 (SPEC-AUTH-RESET-001)
+  - `POST /api/auth/password/reset/request` 엔드포인트: 비밀번호 재설정 요청 (이메일 발송)
+  - `POST /api/auth/password/reset/confirm` 엔드포인트: 비밀번호 재설정 확인 (토큰 검증 + 변경)
+  - 토큰 기반 재설정 시스템 (SHA-256 해시, 30분 만료, 일회용 보장)
+  - 이메일 발송 모듈 (SMTP 연동, 개발 환경 fallback)
+  - Rate Limiting (이메일/IP 3회/10분)
+  - 사용자 열거 공격 방지 (통일 응답)
+  - 세션 무효화 (비밀번호 변경 후 RT 블랙리스트)
+
+### Security
+- OWASP Top 10 준수 (A01: Injection, A02: Broken Auth, A03: Crypto, A07: Identification, A09: Logging)
+- crypto.randomBytes(32) CSPRNG 토큰 생성
+- 파라미터화 쿼리 (SQL Injection 방지)
+- 일회용 토큰 보장 (used_at 추적)
+
+## [1.2.0] - 2026-06-24
+
 ## [1.1.0] - 2026-06-23
 
 ### Added

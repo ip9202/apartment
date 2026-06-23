@@ -5,6 +5,7 @@
 ## 현재 상태
 
 - ✅ **AUTH P0 완료** (SPEC-AUTH-001): 회원가입·로그인·동/호수 인증·강제 탈퇴 (2026-06-20)
+- ✅ **INTEGRATION-AUTH P0 완료** (SPEC-INTEGRATION-AUTH-001): 프론트엔드↔백엔드 인증 연동 (2026-06-23)
 - ✅ **SETUP P0 완료** (SPEC-SETUP-001): 동/호수/직책/회원 관리 (2026-06-22)
 - ✅ **NOTICE P0 완료** (SPEC-NOTICE-001): 공지사항 등록/수정/삭제/열람 (2026-06-22)
 - ✅ **SUGGEST P0 완료** (SPEC-SUGGEST-001): 건의/문의 등록/수정/아카이브/열람/답변/상태/호수이력 (2026-06-22)
@@ -25,6 +26,7 @@
 ## API 엔드포인트
 
 ### 인증 (AUTH)
+- `GET /api/auth/me` - 세션 복원 (현재 사용자 정보 조회)
 - `POST /api/auth/signup` - 회원가입
 - `POST /api/auth/login` - 로그인
 - `POST /api/auth/logout` - 로그아웃

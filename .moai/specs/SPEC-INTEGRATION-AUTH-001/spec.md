@@ -1,8 +1,8 @@
 ---
 id: SPEC-INTEGRATION-AUTH-001
 title: "프론트엔드↔백엔드 인증 연동 (Auth Integration)"
-version: 1.0.0
-status: Planned
+version: 1.1.0
+status: Complete
 created: 2026-06-23
 updated: 2026-06-23
 author: 강력쇠주먹
@@ -14,6 +14,7 @@ issue_number: ""
 
 ## HISTORY
 
+- 2026-06-23 (v1.1.0): 구현 완료. develop 브랜치로 머지됨 (PR #1, commit b6cf5c6). GET /api/auth/me 엔드포인트, useAuth 훅, 데모 계정 시드, 뷰포트 컴포넌트 연동 완료. 15개 테스트 케이스 통과.
 - 2026-06-23 (v1.0.0): 최초 작성. SPEC-AUTH-001 백엔드 인증 API 완료 이후, 데모용 하드코딩 로그인을 실제 API 호출로 교체하기 위한 연동 명세. 세션 복원 엔드포인트(`/api/auth/me`) 추가, 시드 데모 계정 추가, 공유 `useAuth` 훅 도입 포함.
 
 ---

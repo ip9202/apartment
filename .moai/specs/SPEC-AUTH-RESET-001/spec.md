@@ -1,9 +1,9 @@
 ---
 id: "SPEC-AUTH-RESET-001"
 version: "1.0.0"
-status: "Planned"
+status: "Completed"
 created: "2026-06-23"
-updated: "2026-06-23"
+updated: "2026-06-24"
 author: "강력쇠주먹"
 priority: "P1"
 issue_number: 0

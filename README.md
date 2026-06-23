@@ -10,6 +10,7 @@
 - ✅ **NOTICE P0 완료** (SPEC-NOTICE-001): 공지사항 등록/수정/삭제/열람 (2026-06-22)
 - ✅ **SUGGEST P0 완료** (SPEC-SUGGEST-001): 건의/문의 등록/수정/아카이브/열람/답변/상태/호수이력 (2026-06-22)
 - ✅ **PARKING P0 완료** (SPEC-PARKING-001): 주차 자리 배정 추첨 시스템 (2026-06-23)
+- ✅ **AUTH-RESET P0 완료** (SPEC-AUTH-RESET-001): 비밀번호 재설정 (이메일 링크) (2026-06-24)
 
 ## 프로젝트 문서
 
@@ -33,6 +34,8 @@
 - `POST /api/auth/refresh` - 토큰 갱신
 - `POST /api/auth/verify-unit` - 동/호수 인증
 - `DELETE /api/auth/users/[id]/deactivate` - 강제 탈퇴 (ADMIN)
+- `POST /api/auth/password/reset/request` - 비밀번호 재설정 요청 (이메일 발송)
+- `POST /api/auth/password/reset/confirm` - 비밀번호 재설정 확인 (토큰 검증 + 변경)
 
 ### 단지 설정 (SETUP)
 - `GET /api/setup/buildings` - 동/호수 목록 (공개, 인증 불필요)
@@ -67,10 +70,3 @@
 - `PUT /api/parking/rounds/[id]/publish` - 결과 공개 (ADMIN, ASSIGNED→PUBLISHED 전이)
 - `GET /api/parking/rounds/[id]/allocations` - 결과 열람 (역할별 가시성 분기)
 - `GET /api/parking/rounds/[id]/verify` - 투명성 공개 (seed+알고리즘+입력 공개)
-- `POST /api/suggestions` - 건의 등록 (RESIDENT/REP/AUDITOR/CHAIR, ADMIN 제외)
-- `GET /api/suggestions/[id]` - 건의 상세 (인증 사용자, 비공개 시 권한 검사)
-- `PUT /api/suggestions/[id]` - 건의 수정 (작성자 본인, archived/완료 상태 수정 불가)
-- `DELETE /api/suggestions/[id]` - 건의 아카이브 (작성자 본인 또는 ADMIN, 익명화 전환)
-- `POST /api/suggestions/[id]/replies` - 답변 등록 (ADMIN)
-- `PUT /api/suggestions/[id]/status` - 상태 변경 (ADMIN, 화이트리스트 전이 검증)
-- `GET /api/suggestions/units/[building]/[unit]` - 호수별 건의 이력 (ADMIN/CHAIR, 아카이브 포함)

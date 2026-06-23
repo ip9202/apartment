@@ -14,6 +14,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { Pool } from 'pg';
 import { config } from 'dotenv';
+import { hashPassword } from '../src/lib/auth';
 
 config({ path: resolve(process.cwd(), '.env.local') });
 
@@ -48,6 +49,29 @@ const ROLES = [
   { code: 'AUDITOR', name: '감사', sort_order: 4 },
   { code: 'RESIDENT', name: '일반 입주민', sort_order: 5 },
 ];
+
+/**
+ * 데모 계정 상수 — REQ-AUTH-INT-004
+ *
+ * @MX:NOTE: [AUTO] 개발/데모 환경에서 로그인 플로우 검증용 고정 계정.
+ *                 운영 환경 프로비저닝은 별도 SPEC 처리.
+ */
+const DEMO_ACCOUNTS = [
+  {
+    email: 'resident@aitteulak.com',
+    password: 'test1234',
+    role: 'RESIDENT',
+    building: 'A동',
+    unit: '101',
+  },
+  {
+    email: 'admin@aitteulak.com',
+    password: 'test1234',
+    role: 'ADMIN',
+    building: 'A동',
+    unit: '102',
+  },
+] as const;
 
 /**
  * 주어진 풀에 초기 마스터 데이터를 시드.
@@ -92,6 +116,46 @@ export async function runSeed(pool: Pool): Promise<void> {
          ON CONFLICT (code) DO NOTHING`,
         [role.code, role.name, role.sort_order],
       );
+    }
+
+    // 5. 데모 계정 (REQ-AUTH-INT-004)
+    // 비밀번호: test1234 (해싱)
+    const demoPasswordHash = hashPassword('test1234');
+
+    // 데모 계정 루프: 역할 ID와 building/unit ID 조회 → 사용자 생성
+    for (const demo of DEMO_ACCOUNTS) {
+      // 5-1. 역할 ID 조회
+      const roleIdResult = await client.query<{ id: string }>(
+        `SELECT id FROM roles WHERE code = $1`,
+        [demo.role]
+      );
+
+      // 5-2. building/unit ID 조회
+      const buildingUnitResult = await client.query<{
+        building_id: string;
+        unit_id: string;
+      }>(
+        `SELECT b.id AS building_id, u.id AS unit_id
+         FROM buildings b
+         JOIN units u ON u.building_id = b.id AND u.unit_number = $1
+         WHERE b.name = $2`,
+        [demo.unit, demo.building]
+      );
+
+      // 5-3. 사용자 생성 (역할과 unit_id 연결)
+      if (roleIdResult.rows[0] && buildingUnitResult.rows[0]) {
+        await client.query(
+          `INSERT INTO users (email, password_hash, role_id, unit_id, status)
+           VALUES ($1, $2, $3, $4, 'ACTIVE')
+           ON CONFLICT (email) DO NOTHING`,
+          [
+            demo.email,
+            demoPasswordHash,
+            roleIdResult.rows[0].id,
+            buildingUnitResult.rows[0].unit_id,
+          ]
+        );
+      }
     }
 
     await client.query('COMMIT');

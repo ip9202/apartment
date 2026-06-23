@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     globals: true,
-    environment: 'node',
+    environment: 'jsdom', // JSX 처리를 위해 jsdom 사용
     setupFiles: ['./vitest.setup.ts'],
     // DB 통합 테스트는 커넥션 풀 충돌/잠금 경합 방지를 위해 단일 fork 에서 직렬 실행.
     fileParallelism: false,

@@ -1,19 +1,40 @@
 "use client";
 
 import { useState, useCallback } from 'react';
+import { useAuth } from '../hooks/useAuth';
 import { NOTICES, SUGGESTIONS, getTimelineColors, getTabStyles, getCatTabStyles, type Screen } from './demo-data';
 
+/**
+ * TabletApp - Tablet viewport component
+ * Full app with authentication, notices, suggestions, parking
+ *
+ * REQ-AUTH-INT-018: TabletApp useAuth 연동
+ * REQ-AUTH-INT-019: login 화면 API 연동
+ * REQ-AUTH-INT-020: signup 화면 API 연동
+ * REQ-AUTH-INT-021: verify-unit 화면 API 연동
+ * REQ-AUTH-INT-022: logout 기능 API 연동
+ *
+ * @MX:ANCHOR: [AUTO] 태블릿 앱의 단일 진입점 — fan_in >= 3 (메인 레이아웃)
+ * @MX:REASON: 이 컴포넌트를 통해 태블릿 전체 플로우가 제어되며, 변경 시 모든 화면에 영향.
+ */
 export default function TabletApp() {
+  const { state, login, signup, verifyUnit, logout } = useAuth();
+
   // State
   const [screen, setScreen] = useState<Screen>('login');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState<'RESIDENT' | 'ADMIN'>('RESIDENT');
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-  const [loginLoading, setLoginLoading] = useState(false);
-  const [loginError, setLoginError] = useState('');
+
+  // Signup form state
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupName, setSignupName] = useState('');
+
+  // Verify unit form state
+  const [verifyBuilding, setVerifyBuilding] = useState('');
+  const [verifyUnitNumber, setVerifyUnitNumber] = useState('');
 
   // Notice filter state
   const [noticeFilter, setNoticeFilterState] = useState('전체');
@@ -34,7 +55,7 @@ export default function TabletApp() {
   const [parkingApplied, setParkingApplied] = useState(false);
 
   // Computed values
-  const isAdmin = userRole === 'ADMIN';
+  const isAdmin = state.user?.role === 'ADMIN';
 
   const navHomeActive = screen === 'home';
   const navNoticeActive = screen === 'notices' || screen === 'noticeDetail';
@@ -69,21 +90,52 @@ export default function TabletApp() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  const doLogin = useCallback((email: string, password: string) => {
+  /**
+   * 로그인 처리 (REQ-AUTH-INT-019)
+   * useAuth.login 호출 → 성공 시 홈/관리자 화면 이동
+   */
+  const doLogin = useCallback(async (email: string, password: string) => {
     if (!email || !password) {
-      setLoginError('이메일과 비밀번호를 입력해 주세요.');
-      return;
+      return; // TODO: 에러 상태 추가
     }
-    setLoginLoading(true);
-    setLoginError('');
-    setTimeout(() => {
-      const admin = email.includes('admin') || email.startsWith('manager');
-      setUserRole(admin ? 'ADMIN' : 'RESIDENT');
-      setIsLoggedIn(true);
-      setScreen(admin ? 'admin' : 'home');
-      setLoginLoading(false);
-    }, 800);
-  }, []);
+    await login(email, password);
+
+    // 로그인 성공 후 화면 전환 (useAuth 상태로 판단)
+    if (state.user) {
+      const isAdmin = state.user.role === 'ADMIN';
+      setScreen(isAdmin ? 'admin' : 'home');
+    }
+  }, [login, state.user]);
+
+  /**
+   * 회원가입 처리 (REQ-AUTH-INT-020)
+   */
+  const doSignup = useCallback(async () => {
+    if (!signupEmail || !signupPassword || !signupName) {
+      return; // TODO: 에러 상태 추가
+    }
+    await signup(signupEmail, signupPassword, signupName);
+
+    // 회원가입 성공 후 verify 화면 이동
+    if (state.user) {
+      setScreen('verify');
+    }
+  }, [signup, signupEmail, signupPassword, signupName, state.user]);
+
+  /**
+   * 동호수 인증 처리 (REQ-AUTH-INT-021)
+   */
+  const doVerifyUnit = useCallback(async () => {
+    if (!verifyBuilding || !verifyUnitNumber) {
+      return; // TODO: 에러 상태 추가
+    }
+    await verifyUnit(verifyBuilding, verifyUnitNumber);
+
+    // 인증 성공 후 홈 화면 이동
+    if (state.user?.verified) {
+      setScreen('home');
+    }
+  }, [verifyUnit, verifyBuilding, verifyUnitNumber, state.user]);
 
   const handleSetNoticeFilter = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const filter = (e.currentTarget as HTMLDivElement).dataset.filter || '전체';
@@ -207,8 +259,8 @@ export default function TabletApp() {
             </div>
           </div>
 
-          {/* ── AUTH SCREENS ── */}
-          {!isLoggedIn && (
+          {/* AUTH SCREENS */}
+          {!state.user && (
             <div style={{ flex: 1, overflowY: "auto", backgroundColor: "white" }}>
 
               {/* LOGIN */}
@@ -320,7 +372,7 @@ export default function TabletApp() {
                       />
                     </div>
                   </div>
-                  {loginError && (
+                  {state.error && (
                     <div style={{
                       padding: "10px 14px",
                       backgroundColor: "#FEF2F2",
@@ -331,7 +383,7 @@ export default function TabletApp() {
                       gap: "8px"
                     }}>
                       <span style={{ fontSize: "15px" }}>⚠️</span>
-                      <span style={{ fontSize: "13px", color: "#DC2626" }}>{loginError}</span>
+                      <span style={{ fontSize: "13px", color: "#DC2626" }}>{state.error}</span>
                     </div>
                   )}
                   <button
@@ -339,7 +391,7 @@ export default function TabletApp() {
                     style={{
                       width: "100%",
                       height: "52px",
-                      backgroundColor: loginLoading ? "#93C5FD" : "#2563EB",
+                      backgroundColor: state.loading ? "#93C5FD" : "#2563EB",
                       color: "white",
                       border: "none",
                       borderRadius: "12px",
@@ -354,7 +406,7 @@ export default function TabletApp() {
                       letterSpacing: "-0.2px"
                     }}
                   >
-                    {loginLoading ? (
+                    {state.loading ? (
                       <span style={{
                         width: "18px",
                         height: "18px",
@@ -448,8 +500,7 @@ export default function TabletApp() {
                         fontSize: "13px",
                         fontWeight: 700,
                         cursor: "pointer"
-                      }}
-                    >👤 입주민</button>
+                      }}>👤 입주민</button>
                     <button
                       onClick={() => doLogin('admin@aitteulak.com', 'test1234')}
                       style={{
@@ -462,8 +513,7 @@ export default function TabletApp() {
                         fontSize: "13px",
                         fontWeight: 700,
                         cursor: "pointer"
-                      }}
-                    >🔧 관리자</button>
+                      }}>🔧 관리자</button>
                   </div>
                 </div>
               )}
@@ -520,7 +570,37 @@ export default function TabletApp() {
                       }}>이메일</label>
                       <input
                         type="email"
+                        value={signupEmail}
+                        onChange={(e) => setSignupEmail(e.target.value)}
                         placeholder="이메일을 입력해 주세요"
+                        style={{
+                          width: "100%",
+                          height: "50px",
+                          border: "1.5px solid #E5E7EB",
+                          borderRadius: "10px",
+                          padding: "0 16px",
+                          fontSize: "15px",
+                          color: "#111827",
+                          outline: "none",
+                          backgroundColor: "#F9FAFB"
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: "#374151",
+                        display: "block",
+                        marginBottom: "7px",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px"
+                      }}>이름</label>
+                      <input
+                        type="text"
+                        value={signupName}
+                        onChange={(e) => setSignupName(e.target.value)}
+                        placeholder="이름을 입력해 주세요"
                         style={{
                           width: "100%",
                           height: "50px",
@@ -546,33 +626,9 @@ export default function TabletApp() {
                       }}>비밀번호</label>
                       <input
                         type="password"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
                         placeholder="8자 이상, 영문+숫자 조합"
-                        style={{
-                          width: "100%",
-                          height: "50px",
-                          border: "1.5px solid #E5E7EB",
-                          borderRadius: "10px",
-                          padding: "0 16px",
-                          fontSize: "15px",
-                          color: "#111827",
-                          outline: "none",
-                          backgroundColor: "#F9FAFB"
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{
-                        fontSize: "12px",
-                        fontWeight: 700,
-                        color: "#374151",
-                        display: "block",
-                        marginBottom: "7px",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px"
-                      }}>비밀번호 확인</label>
-                      <input
-                        type="password"
-                        placeholder="비밀번호를 다시 입력해 주세요"
                         style={{
                           width: "100%",
                           height: "50px",
@@ -616,7 +672,7 @@ export default function TabletApp() {
                       <div style={{
                         display: "flex",
                         flexDirection: "column",
-                        gap: "10px",
+                        gap: "9px",
                         paddingLeft: "4px"
                       }}>
                         <div style={{
@@ -638,11 +694,12 @@ export default function TabletApp() {
                       </div>
                     </div>
                     <button
-                      onClick={() => setScreen('verify')}
+                      onClick={() => doSignup()}
+                      disabled={state.loading}
                       style={{
                         width: "100%",
                         height: "52px",
-                        backgroundColor: "#2563EB",
+                        backgroundColor: state.loading ? "#93C5FD" : "#2563EB",
                         color: "white",
                         border: "none",
                         borderRadius: "12px",
@@ -650,9 +707,13 @@ export default function TabletApp() {
                         fontWeight: 700,
                         cursor: "pointer",
                         letterSpacing: "-0.2px"
-                      }}
-                    >회원가입</button>
-                    <p style={{ textAlign: "center", fontSize: "14px", color: "#9CA3AF", margin: "0" }}>
+                      }}>{state.loading ? '가입 중...' : '회원가입'}</button>
+                    <p style={{
+                      textAlign: "center",
+                      fontSize: "14px",
+                      color: "#9CA3AF",
+                      margin: "0"
+                    }}>
                       이미 계정이 있으신가요?{" "}
                       <span
                         onClick={() => setScreen('login')}
@@ -727,20 +788,24 @@ export default function TabletApp() {
                           textTransform: "uppercase",
                           letterSpacing: "0.5px"
                         }}>동 선택</label>
-                        <select style={{
-                          width: "100%",
-                          height: "50px",
-                          border: "1.5px solid #E5E7EB",
-                          borderRadius: "10px",
-                          padding: "0 16px",
-                          fontSize: "15px",
-                          color: "#111827",
-                          outline: "none",
-                          backgroundColor: "#F9FAFB",
-                          cursor: "pointer",
-                          appearance: "none",
-                          WebkitAppearance: "none"
-                        }}>
+                        <select
+                          value={verifyBuilding}
+                          onChange={(e) => setVerifyBuilding(e.target.value)}
+                          style={{
+                            width: "100%",
+                            height: "50px",
+                            border: "1.5px solid #E5E7EB",
+                            borderRadius: "10px",
+                            padding: "0 16px",
+                            fontSize: "15px",
+                            color: "#111827",
+                            outline: "none",
+                            backgroundColor: "#F9FAFB",
+                            cursor: "pointer",
+                            appearance: "none",
+                            WebkitAppearance: "none"
+                          }}
+                        >
                           <option value="">동을 선택해 주세요</option>
                           <option value="A">A동</option>
                           <option value="B">B동</option>
@@ -756,38 +821,47 @@ export default function TabletApp() {
                           textTransform: "uppercase",
                           letterSpacing: "0.5px"
                         }}>호수 선택</label>
-                        <select style={{
-                          width: "100%",
-                          height: "50px",
-                          border: "1.5px solid #E5E7EB",
-                          borderRadius: "10px",
-                          padding: "0 16px",
-                          fontSize: "15px",
-                          color: "#111827",
-                          outline: "none",
-                          backgroundColor: "#F9FAFB",
-                          cursor: "pointer",
-                          appearance: "none",
-                          WebkitAppearance: "none"
-                        }}>
+                        <select
+                          value={verifyUnitNumber}
+                          onChange={(e) => setVerifyUnitNumber(e.target.value)}
+                          style={{
+                            width: "100%",
+                            height: "50px",
+                            border: "1.5px solid #E5E7EB",
+                            borderRadius: "10px",
+                            padding: "0 16px",
+                            fontSize: "15px",
+                            color: "#111827",
+                            outline: "none",
+                            backgroundColor: "#F9FAFB",
+                            cursor: "pointer",
+                            appearance: "none",
+                            WebkitAppearance: "none"
+                          }}
+                        >
                           <option value="">호수를 선택해 주세요</option>
-                          <option>101호</option><option>102호</option><option>103호</option>
-                          <option>201호</option><option>202호</option><option>203호</option>
-                          <option>301호</option><option>302호</option><option>303호</option>
-                          <option>401호</option><option>402호</option><option>403호</option>
+                          <option>101호</option>
+                          <option>102호</option>
+                          <option>103호</option>
+                          <option>201호</option>
+                          <option>202호</option>
+                          <option>203호</option>
+                          <option>301호</option>
+                          <option>302호</option>
+                          <option>303호</option>
+                          <option>401호</option>
+                          <option>402호</option>
+                          <option>403호</option>
                         </select>
                       </div>
                     </div>
                     <button
-                      onClick={() => {
-                        setIsLoggedIn(true);
-                        setScreen('home');
-                        setUserRole('RESIDENT');
-                      }}
+                      onClick={() => doVerifyUnit()}
+                      disabled={state.loading}
                       style={{
                         width: "100%",
                         height: "52px",
-                        backgroundColor: "#2563EB",
+                        backgroundColor: state.loading ? "#93C5FD" : "#2563EB",
                         color: "white",
                         border: "none",
                         borderRadius: "12px",
@@ -795,8 +869,7 @@ export default function TabletApp() {
                         fontWeight: 700,
                         cursor: "pointer",
                         letterSpacing: "-0.2px"
-                      }}
-                    >인증하기</button>
+                      }}>{state.loading ? '인증 중...' : '인증하기'}</button>
                   </div>
                 </div>
               )}
@@ -805,7 +878,7 @@ export default function TabletApp() {
           )}
 
           {/* ── MAIN APP ── */}
-          {isLoggedIn && (
+          {state.user && (
             <div style={{ flex: 1, overflow: "hidden", position: "relative" }}>
 
               {/* Scrollable content */}
@@ -2295,7 +2368,7 @@ export default function TabletApp() {
                               color: "#111827",
                               marginBottom: "5px",
                               letterSpacing: "-0.3px"
-                            }}>resident@aitteulak.com</div>
+                            }}>{state.user?.email || 'user@example.com'}</div>
                             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                               <span style={{
                                 fontSize: "11px",
@@ -2429,7 +2502,7 @@ export default function TabletApp() {
                           display: "flex",
                           justifyContent: "space-between",
                           alignItems: "center",
-                          cursor: "pointer"
+                          cursor: pointer
                         }}>
                           <span style={{ fontSize: "14px", color: "#374151" }}>개인정보 처리방침</span>
                           <svg width="7" height="12" viewBox="0 0 7 12" fill="none">
@@ -2439,7 +2512,7 @@ export default function TabletApp() {
                       </div>
                       <button
                         onClick={() => {
-                          setIsLoggedIn(false);
+                          logout();
                           setScreen('login');
                           setLoginEmail('');
                           setLoginPassword('');

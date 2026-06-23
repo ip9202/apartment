@@ -57,6 +57,43 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
+/**
+ * 비밀번호 재설정 강도 정규식 — 8자 이상, 영문+숫자+특수문자 조합.
+ * SPEC-AUTH-RESET-001 §4 REQ-RESET-004/006. 로그인/회원가입보다 한 단계 강한 정책.
+ * @MX:NOTE: [AUTO] 재설정 시 강제되는 강력한 비밀번호 정책 — 회원가입(영문+숫자)보다 특수문자 추가 요구.
+ */
+const STRONG_PASSWORD_REGEX = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^A-Za-z0-9\s]).{8,}$/;
+
+/** 재설정 요청 본문 스키마 (REQ-RESET-001). email 만 검증. */
+export const resetRequestSchema = z.object({
+  email: z
+    .string()
+    .max(255, '이메일은 255자 이하여야 합니다')
+    .refine((v) => EMAIL_REGEX.test(v), '올바른 이메일 형식이 아닙니다'),
+});
+
+export type ResetRequestInput = z.infer<typeof resetRequestSchema>;
+
+/** 재설정 확인 본문 스키마 (REQ-RESET-004/006). token + 강력한 새 비밀번호 + 확인. */
+export const resetConfirmSchema = z
+  .object({
+    token: z.string().min(1, '토큰이 필요합니다'),
+    password: z
+      .string()
+      .min(8, '비밀번호는 8자 이상이어야 합니다')
+      .regex(
+        STRONG_PASSWORD_REGEX,
+        '비밀번호는 8자 이상이며 영문, 숫자, 특수문자를 모두 포함해야 합니다',
+      ),
+    password_confirm: z.string(),
+  })
+  .refine((data) => data.password === data.password_confirm, {
+    message: '비밀번호 확인이 일치하지 않습니다',
+    path: ['password_confirm'],
+  });
+
+export type ResetConfirmInput = z.infer<typeof resetConfirmSchema>;
+
 /** 회원가입 응답 본문 data 객체 (AC-AUTH-025: password_hash 절대 미포함). */
 export interface SignupResponseUser {
   id: string;

@@ -8,6 +8,7 @@
 - ✅ **SETUP P0 완료** (SPEC-SETUP-001): 동/호수/직책/회원 관리 (2026-06-22)
 - ✅ **NOTICE P0 완료** (SPEC-NOTICE-001): 공지사항 등록/수정/삭제/열람 (2026-06-22)
 - ✅ **SUGGEST P0 완료** (SPEC-SUGGEST-001): 건의/문의 등록/수정/아카이브/열람/답변/상태/호수이력 (2026-06-22)
+- ✅ **PARKING P0 완료** (SPEC-PARKING-001): 주차 자리 배정 추첨 시스템 (2026-06-23)
 
 ## 프로젝트 문서
 
@@ -48,6 +49,21 @@
 
 ### 건의/문의 (SUGGEST)
 - `GET /api/suggestions` - 건의 목록 (인증 사용자, 역할별 비공개 분기 + 필터 + 페이지네이션)
+- `POST /api/suggestions` - 건의 등록 (RESIDENT+)
+- `GET /api/suggestions/[id]` - 건의 상세 (본인 또는 ADMIN/CHAIR)
+- `PUT /api/suggestions/[id]` - 건의 수정 (본인 또는 ADMIN)
+- `DELETE /api/suggestions/[id]` - 건의 삭제 (영구 삭제, 본인 또는 ADMIN)
+- `PUT /api/suggestions/[id]/archive` - 아카이브 (본인 또는 ADMIN)
+- `POST /api/suggestions/[id]/response` - 답변 (ADMIN)
+
+### 주차 자리 배정 추첨 (PARKING)
+- `POST /api/parking/rounds` - 회차 생성 (ADMIN/CHAIR, 자리풀 동적 입력, seed 자동생성)
+- `POST /api/parking/rounds/[id]/draw` - 추첨(자리 확정) (RESIDENT+, 세대당 1회, 결정론적 순열)
+- `DELETE /api/parking/rounds/[id]/draw` - 추첨 취소/반납 (본인, OPEN 상태만)
+- `POST /api/parking/rounds/[id]/auto-assign` - 자동배정 실행 (ADMIN, 미참여 세대 AUTO, OPEN→ASSIGNED 전이)
+- `PUT /api/parking/rounds/[id]/publish` - 결과 공개 (ADMIN, ASSIGNED→PUBLISHED 전이)
+- `GET /api/parking/rounds/[id]/allocations` - 결과 열람 (역할별 가시성 분기)
+- `GET /api/parking/rounds/[id]/verify` - 투명성 공개 (seed+알고리즘+입력 공개)
 - `POST /api/suggestions` - 건의 등록 (RESIDENT/REP/AUDITOR/CHAIR, ADMIN 제외)
 - `GET /api/suggestions/[id]` - 건의 상세 (인증 사용자, 비공개 시 권한 검사)
 - `PUT /api/suggestions/[id]` - 건의 수정 (작성자 본인, archived/완료 상태 수정 불가)

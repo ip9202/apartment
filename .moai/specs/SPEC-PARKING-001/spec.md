@@ -1,7 +1,7 @@
 ---
 id: "SPEC-PARKING-001"
-version: "0.2.0"
-status: "draft"
+version: "1.0.0"
+status: "completed"
 created: "2026-06-23"
 updated: "2026-06-23"
 author: "강력쇠주먹"
@@ -338,7 +338,64 @@ Run Phase에서 다음 @MX 태그를 적용한다:
 
 ## Implementation Notes
 
-**구현 상태**: 초안 (사용자 승인 전)
+**구현 상태**: 완료 (P0 전체 구현, 2026-06-23)
+
+## Implementation Completion
+
+**구현 완료일**: 2026-06-23
+**구현 방법론**: TDD (RED-GREEN-REFACTOR)
+**커밋 수**: d81d209 (feat: SPEC-PARKING-001 주차 자리 배정 추첨 P0 구현)
+
+### 구현된 산출물
+
+**Migration (M5)**:
+- `migrations/008_parking.sql` - parking_rounds, parking_assignments 테이블 생성
+  - parking_rounds: id, name, application_start, application_end, slot_pool(JSONB), seed_value, status, is_published, created_at
+  - parking_assignments: id, round_id, unit_id, assigned_slot, assignment_source(DRAW/AUTO/ADMIN), drawn_at, drawn_by
+  - 인덱스: idx_parking_assignments_round, UNIQUE(round_id, unit_id)
+
+**Library Files**:
+- `src/lib/parking-lottery.ts` - 결정론적 순열 알고리즘 (HMAC-SHA256 PRNG + Fisher-Yates)
+  - @MX:ANCHOR on generatePermutation (fan_in=3: 추첨/자동배정/투명성)
+  - 100% 라인 커버리지
+- `src/lib/parking-rbac.ts` - PARKING 도메인 로컬 RBAC 헬퍼 (Option C 패턴)
+  - requireAuthenticated, filterAllocationsByRole, 역할별 가시성 분기
+  - 88% 라인 커버리지 / 100% 함수 커버리지
+
+**API Routes** (7개):
+1. `POST /api/parking/rounds` - 회차 생성 (ADMIN/CHAIR) - REQ-PK-001~005
+2. `POST /api/parking/rounds/[id]/draw` - 추첨(자리 확정) (RESIDENT+) - REQ-PK-006~010
+3. `DELETE /api/parking/rounds/[id]/draw` - 추첨 취소/반납 - REQ-PK-011~014
+4. `POST /api/parking/rounds/[id]/auto-assign` - 자동배정 실행 (ADMIN) - REQ-PK-015~019
+5. `PUT /api/parking/rounds/[id]/publish` - 결과 공개 (ADMIN) - REQ-PK-020~022
+6. `GET /api/parking/rounds/[id]/allocations` - 결과 열람 (역할별 가시성) - REQ-PK-023~025
+7. `GET /api/parking/rounds/[id]/verify` - 투명성 공개 (seed+알고리즘+입력) - REQ-PK-026~027
+
+**테스트 커버리지**:
+- PARKING 전용: 87개 테스트 통과
+- 전체 테스트: 499개 통과 (기존 412 + 신규 87)
+- 회귀 없음: 모든 기존 테스트 통과
+
+### 주요 설계 결정
+
+1. **결정론성 보장**: 동일 seed + 동일 정렬 unit 목록 + 동일 slot_pool → 동일 배정 결과
+2. **동시성 직렬화**: 자동배정 시 SELECT FOR UPDATE + withTransaction으로 원자 실행
+3. **정보은닉 (REQ-PK-024)**: 미공개 회차에서 타인 조회 시 빈 배열 200 (존재 여부 누출 방지)
+4. **도메인 불변 수호**: 자리 부족 시 409 + 전체 롤백 (탈락자 없음 강제)
+5. **RBAC 패턴 재사용**: AUTH/SETUP/NOTICE/SUGGEST 패턴 재사용 (공유 파일 일체 수정 없음)
+
+### @MX 태그 적용 현황
+
+- **@MX:ANCHOR**: generatePermutation, requireAuthenticated, migration 008 스키마
+- **@MX:WARN**: 동시성 직렬화 구간(FOR UPDATE), seed 불변, UNIQUE(round_id, unit_id)
+- **@MX:NOTE**: slot assignment 도메인 본질, 자리풀 동적 입력, 재현 검증, 정보은닉
+
+### P1 후속 작업 (별도 SPEC 대상)
+
+- PARKING-08 추첨 이력 조회 (@MX:TODO 표시)
+- 회차 수정/삭제 (@MX:TODO 표시)
+- 관리소 수동 배정 API (@MX:TODO 표시)
+- 주차 알림 (푸시/이메일, P2)
 
 ### Delta 마커 (brownfield — AUTH/SETUP/NOTICE/SUGGEST 기반)
 

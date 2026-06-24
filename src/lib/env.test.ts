@@ -73,9 +73,64 @@ describe('env (부트 검증)', () => {
         JWT_SECRET: 'a'.repeat(40),
         JWT_REFRESH_SECRET: 'b'.repeat(40),
         NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+        KAKAO_REST_API_KEY: 'kakao-key',
+        KAKAO_CLIENT_SECRET: 'kakao-secret',
+        KAKAO_REDIRECT_URI: 'http://localhost:3000/api/auth/kakao/callback',
       });
       expect(result.DATABASE_URL).toBe('postgresql://u@h/d');
       expect(result.JWT_SECRET.length).toBe(40);
+    });
+  });
+
+  // 카카오 환경 변수 부트 검증 (SPEC-AUTH-KAKAO-001 T-001, REQ-KAKAO-002)
+  describe('카카오 환경 변수 부트 검증 (SPEC-AUTH-KAKAO-001)', () => {
+    const kakaoBase = {
+      DATABASE_URL: 'postgresql://u@h/d',
+      JWT_SECRET: 'a'.repeat(40),
+      JWT_REFRESH_SECRET: 'b'.repeat(40),
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+    };
+
+    it('KAKAO_REST_API_KEY 누락 시 throw 한다', () => {
+      expect(() =>
+        loadEnv({
+          ...kakaoBase,
+          KAKAO_CLIENT_SECRET: 'secret',
+          KAKAO_REDIRECT_URI: 'http://localhost:3000/api/auth/kakao/callback',
+        }),
+      ).toThrow(/KAKAO_REST_API_KEY/i);
+    });
+
+    it('KAKAO_CLIENT_SECRET 누락 시 throw 한다', () => {
+      expect(() =>
+        loadEnv({
+          ...kakaoBase,
+          KAKAO_REST_API_KEY: 'key',
+          KAKAO_REDIRECT_URI: 'http://localhost:3000/api/auth/kakao/callback',
+        }),
+      ).toThrow(/KAKAO_CLIENT_SECRET/i);
+    });
+
+    it('KAKAO_REDIRECT_URI 누락 시 throw 한다', () => {
+      expect(() =>
+        loadEnv({
+          ...kakaoBase,
+          KAKAO_REST_API_KEY: 'key',
+          KAKAO_CLIENT_SECRET: 'secret',
+        }),
+      ).toThrow(/KAKAO_REDIRECT_URI/i);
+    });
+
+    it('카카오 변수 3종 모두 설정 시 검증된 객체에 포함된다', () => {
+      const result = loadEnv({
+        ...kakaoBase,
+        KAKAO_REST_API_KEY: 'rest-key-123',
+        KAKAO_CLIENT_SECRET: 'client-secret-456',
+        KAKAO_REDIRECT_URI: 'https://example.com/api/auth/kakao/callback',
+      });
+      expect(result.KAKAO_REST_API_KEY).toBe('rest-key-123');
+      expect(result.KAKAO_CLIENT_SECRET).toBe('client-secret-456');
+      expect(result.KAKAO_REDIRECT_URI).toBe('https://example.com/api/auth/kakao/callback');
     });
   });
 });

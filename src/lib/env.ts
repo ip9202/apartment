@@ -18,6 +18,12 @@ export interface AppEnv {
   JWT_REFRESH_SECRET: string;
   NEXT_PUBLIC_APP_URL: string;
   NODE_ENV?: string;
+  /** 카카오 OAuth REST API 키 (client_id). SPEC-AUTH-KAKAO-001. */
+  KAKAO_REST_API_KEY: string;
+  /** 카카오 OAuth Client Secret (토큰 교환용). SPEC-AUTH-KAKAO-001. */
+  KAKAO_CLIENT_SECRET: string;
+  /** 카카오 OAuth 콜백 URL. SPEC-AUTH-KAKAO-001. */
+  KAKAO_REDIRECT_URI: string;
 }
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -33,6 +39,9 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
   const jwtRefreshSecret = source.JWT_REFRESH_SECRET;
   const databaseUrl = source.DATABASE_URL;
   const appUrl = source.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const kakaoRestApiKey = source.KAKAO_REST_API_KEY;
+  const kakaoClientSecret = source.KAKAO_CLIENT_SECRET;
+  const kakaoRedirectUri = source.KAKAO_REDIRECT_URI;
 
   assert(databaseUrl, 'DATABASE_URL 이 설정되지 않았습니다');
   assert(jwtSecret, 'JWT_SECRET 이 설정되지 않았습니다');
@@ -49,6 +58,10 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
     jwtSecret !== jwtRefreshSecret,
     'JWT_SECRET 과 JWT_REFRESH_SECRET 은 서로 상이해야 합니다 (distinct secrets required)',
   );
+  // 카카오 OAuth 변수 3종 fail-fast 검증 (SPEC-AUTH-KAKAO-001 T-001, REQ-KAKAO-002)
+  assert(kakaoRestApiKey, 'KAKAO_REST_API_KEY 가 설정되지 않았습니다');
+  assert(kakaoClientSecret, 'KAKAO_CLIENT_SECRET 가 설정되지 않았습니다');
+  assert(kakaoRedirectUri, 'KAKAO_REDIRECT_URI 가 설정되지 않았습니다');
 
   return {
     DATABASE_URL: databaseUrl,
@@ -57,6 +70,9 @@ export function loadEnv(source: Record<string, string | undefined> = process.env
     JWT_REFRESH_SECRET: jwtRefreshSecret,
     NEXT_PUBLIC_APP_URL: appUrl,
     NODE_ENV: source.NODE_ENV,
+    KAKAO_REST_API_KEY: kakaoRestApiKey,
+    KAKAO_CLIENT_SECRET: kakaoClientSecret,
+    KAKAO_REDIRECT_URI: kakaoRedirectUri,
   };
 }
 

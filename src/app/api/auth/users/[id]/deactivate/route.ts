@@ -137,16 +137,12 @@ export async function POST(request: Request, ctx: DeactivateParams): Promise<Res
          WHERE author_id = $1`,
         [targetId],
       );
-      // REQ-ATT-028: 탈퇴자가 업로드한 첨부 — storage_path 수집 후 행 삭제 (디스크는 post-commit).
-      const pathsRes = await client.query<{ storage_path: string }>(
-        `SELECT storage_path FROM attachments WHERE uploader_id = $1`,
+      // REQ-ATT-028: 탈퇴자가 업로드한 첨부 — DELETE RETURNING 으로 storage_path 수집+삭제 1쿼리 (W-P2 최적화).
+      const delRes = await client.query<{ storage_path: string }>(
+        `DELETE FROM attachments WHERE uploader_id = $1 RETURNING storage_path`,
         [targetId],
       );
-      await client.query(
-        `DELETE FROM attachments WHERE uploader_id = $1`,
-        [targetId],
-      );
-      return pathsRes.rows.map((r) => r.storage_path);
+      return delRes.rows.map((r) => r.storage_path);
     });
   } catch {
     // AC-024: 트랜잭션 실패 → withTransaction 이 ROLLBACK 후 재전파 → 500

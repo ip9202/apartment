@@ -278,12 +278,8 @@ export async function DELETE(request: Request, ctx: SuggestionParams): Promise<R
   let pathsToDelete: string[] = [];
   try {
     pathsToDelete = await withTransaction(async (client) => {
-      const pathsRes = await client.query<{ storage_path: string }>(
-        `SELECT storage_path FROM attachments WHERE target_type = 'SUGGEST' AND target_id = $1`,
-        [suggestionId],
-      );
-      await client.query(
-        `DELETE FROM attachments WHERE target_type = 'SUGGEST' AND target_id = $1`,
+      const delRes = await client.query<{ storage_path: string }>(
+        `DELETE FROM attachments WHERE target_type = 'SUGGEST' AND target_id = $1 RETURNING storage_path`,
         [suggestionId],
       );
       await client.query(
@@ -292,7 +288,7 @@ export async function DELETE(request: Request, ctx: SuggestionParams): Promise<R
          WHERE id = $1`,
         [suggestionId],
       );
-      return pathsRes.rows.map((r) => r.storage_path);
+      return delRes.rows.map((r) => r.storage_path);
     });
   } catch {
     return NextResponse.json(

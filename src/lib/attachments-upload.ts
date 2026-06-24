@@ -59,6 +59,8 @@ export async function uploadAttachment(
   }
 
   // 2. 게시물당 첨부 수 한도 (REQ-ATT-024)
+  // @MX:NOTE: [AUTO] TOCTOU known limitation — SELECT COUNT 후 INSERT 가 비원자적이라 동시 업로드 시
+  //           5→6 초과 가능. 38세대 규모에서 허용 범위; 행잠금/부분유니크인덱스는 과설계 (review W-P1).
   const cntRes = await query<{ n: string }>(
     'SELECT COUNT(*)::text AS n FROM attachments WHERE target_type = $1 AND target_id = $2',
     [target_type, target_id],

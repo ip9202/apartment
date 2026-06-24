@@ -256,16 +256,12 @@ export async function DELETE(request: Request, ctx: NoticeParams): Promise<Respo
   let pathsToDelete: string[] = [];
   try {
     pathsToDelete = await withTransaction(async (client) => {
-      const pathsRes = await client.query<{ storage_path: string }>(
-        `SELECT storage_path FROM attachments WHERE target_type = 'NOTICE' AND target_id = $1`,
-        [noticeId],
-      );
-      await client.query(
-        `DELETE FROM attachments WHERE target_type = 'NOTICE' AND target_id = $1`,
+      const delRes = await client.query<{ storage_path: string }>(
+        `DELETE FROM attachments WHERE target_type = 'NOTICE' AND target_id = $1 RETURNING storage_path`,
         [noticeId],
       );
       await client.query('DELETE FROM notices WHERE id = $1', [noticeId]);
-      return pathsRes.rows.map((r) => r.storage_path);
+      return delRes.rows.map((r) => r.storage_path);
     });
   } catch {
     return NextResponse.json(

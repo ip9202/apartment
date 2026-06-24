@@ -104,7 +104,28 @@ export async function GET(request: Request, ctx: NoticeParams): Promise<Response
     return notFound('존재하지 않는 공지입니다');
   }
 
-  return NextResponse.json({ success: true, data: row }, { status: 200 });
+  // 첨부 메타데이터 조회 (SPEC-ATTACHMENT-001 REQ-ATT-009/011) — storage_path 미노출
+  const attRes = await query<{
+    id: string;
+    original_filename: string;
+    mime_type: string;
+    size_bytes: string;
+    created_at: string;
+  }>(
+    `SELECT id, original_filename, mime_type, size_bytes, created_at
+     FROM attachments WHERE target_type = 'NOTICE' AND target_id = $1
+     ORDER BY created_at ASC`,
+    [noticeId],
+  );
+  const attachments = attRes.rows.map((a) => ({
+    id: a.id,
+    original_filename: a.original_filename,
+    mime_type: a.mime_type,
+    size_bytes: Number(a.size_bytes),
+    created_at: a.created_at,
+  }));
+
+  return NextResponse.json({ success: true, data: { ...row, attachments } }, { status: 200 });
 }
 
 /**

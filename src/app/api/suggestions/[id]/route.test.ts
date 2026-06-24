@@ -34,6 +34,9 @@ async function ensureSchemaAndSeed(): Promise<void> {
       '005_managed_building_unify.sql',
       '006_notices.sql',
       '007_suggestions_expand.sql',
+      '008_parking.sql',
+      '009_password_reset_tokens.sql',
+      '010_attachments.sql',
     ]) {
       await applySql(setupPool, readMigration(file));
     }
@@ -105,6 +108,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  await query('DELETE FROM attachments');
   await query('DELETE FROM suggestion_replies');
   await query('DELETE FROM suggestions');
   await query('UPDATE users SET unit_id = NULL');
@@ -112,6 +116,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
+  await query('DELETE FROM attachments');
   await query('DELETE FROM suggestion_replies');
   await query('DELETE FROM suggestions');
   await query('UPDATE users SET unit_id = NULL');
@@ -144,6 +149,7 @@ describe('GET /api/suggestions/[id] — 건의 상세 (M5, REQ-SUGGEST-023~026)'
         unit: string;
         author_id: string;
         created_at: string;
+        attachments?: unknown[];
       };
     };
     expect(body.data.id).toBe(sid);
@@ -153,6 +159,8 @@ describe('GET /api/suggestions/[id] — 건의 상세 (M5, REQ-SUGGEST-023~026)'
     expect(body.data.is_public).toBe(true);
     expect(body.data.status).toBe('접수');
     expect(body.data.author_label).toBe('입주민');
+    // REQ-ATT-010/011: attachments[] 포함
+    expect(Array.isArray(body.data.attachments)).toBe(true);
     expect(body.data.building).toBe('A동');
     expect(body.data.unit).toBe('101');
   });
@@ -245,6 +253,52 @@ describe('GET /api/suggestions/[id] — 건의 상세 (M5, REQ-SUGGEST-023~026)'
 
     const res = await getSuggestion(at, sid);
     expect(res.status).toBe(200);
+  });
+});
+
+describe('GET /api/suggestions/[id] — attachments[] 응답 (SPEC-ATTACHMENT-001 REQ-ATT-010/011)', () => {
+  it('건의에 첨부 → attachments[] 메타데이터, storage_path 미노출', async () => {
+    const a101 = await getUnitId('A동', '101');
+    const categoryId = await getCategoryId('시설');
+    const author = await seedUser('att-enrich@example.com', { role: 'RESIDENT', unitId: a101 });
+    const sid = await seedSuggestion({ authorId: author.id, unitId: a101, title: 't', isPublic: true, categoryId });
+    const sha = 'c'.repeat(64);
+    await query(
+      `INSERT INTO attachments (target_type, target_id, uploader_id, original_filename, mime_type, size_bytes, storage_path, sha256)
+       VALUES ('SUGGEST', $1, $2, 'p.png', 'image/png', 50, '/tmp/p.png', $3)`,
+      [sid, author.id, sha],
+    );
+
+    const at = signAccessToken({ sub: author.id, role: 'RESIDENT', verified: true });
+    const res = await getSuggestion(at, sid);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      data: {
+        attachments: Array<{ id: string; original_filename: string; mime_type: string; size_bytes: number; storage_path?: string }>;
+      };
+    };
+    expect(body.data.attachments.length).toBe(1);
+    expect(body.data.attachments[0].original_filename).toBe('p.png');
+    expect(body.data.attachments[0].size_bytes).toBe(50);
+    expect(body.data.attachments[0].storage_path).toBeUndefined();
+  });
+
+  it('비공개 건의 무권한 → 403 (attachments 노출 전 차단)', async () => {
+    const a101 = await getUnitId('A동', '101');
+    const categoryId = await getCategoryId('시설');
+    const author = await seedUser('att-priv@example.com', { role: 'RESIDENT', unitId: a101 });
+    const sid = await seedSuggestion({ authorId: author.id, unitId: a101, title: 't', isPublic: false, categoryId });
+    const sha = 'd'.repeat(64);
+    await query(
+      `INSERT INTO attachments (target_type, target_id, uploader_id, original_filename, mime_type, size_bytes, storage_path, sha256)
+       VALUES ('SUGGEST', $1, $2, 'p.png', 'image/png', 50, '/tmp/p.png', $3)`,
+      [sid, author.id, sha],
+    );
+    const other = await seedUser('att-other@example.com', { role: 'RESIDENT', unitId: a101 });
+    const at = signAccessToken({ sub: other.id, role: 'RESIDENT', verified: true });
+
+    const res = await getSuggestion(at, sid);
+    expect(res.status).toBe(403);
   });
 });
 

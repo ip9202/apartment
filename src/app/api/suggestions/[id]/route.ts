@@ -86,7 +86,28 @@ export async function GET(request: Request, ctx: SuggestionParams): Promise<Resp
     }
   }
 
-  // 5. 200 응답
+  // 5. 첨부 메타데이터 조회 (SPEC-ATTACHMENT-001 REQ-ATT-010/011) — 권한 통과 후, storage_path 미노출
+  const attRes = await query<{
+    id: string;
+    original_filename: string;
+    mime_type: string;
+    size_bytes: string;
+    created_at: string;
+  }>(
+    `SELECT id, original_filename, mime_type, size_bytes, created_at
+     FROM attachments WHERE target_type = 'SUGGEST' AND target_id = $1
+     ORDER BY created_at ASC`,
+    [suggestionId],
+  );
+  const attachments = attRes.rows.map((a) => ({
+    id: a.id,
+    original_filename: a.original_filename,
+    mime_type: a.mime_type,
+    size_bytes: Number(a.size_bytes),
+    created_at: a.created_at,
+  }));
+
+  // 6. 200 응답
   return NextResponse.json(
     {
       success: true,
@@ -104,6 +125,7 @@ export async function GET(request: Request, ctx: SuggestionParams): Promise<Resp
         created_at: row.created_at,
         updated_at: row.updated_at,
         archived_at: row.archived_at,
+        attachments,
       },
     },
     { status: 200 },

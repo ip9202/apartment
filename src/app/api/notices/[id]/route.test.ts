@@ -35,6 +35,10 @@ async function ensureSchemaAndSeed(): Promise<void> {
       '004_suggestions_minimal.sql',
       '005_managed_building_unify.sql',
       '006_notices.sql',
+      '007_suggestions_expand.sql',
+      '008_parking.sql',
+      '009_password_reset_tokens.sql',
+      '010_attachments.sql',
     ]) {
       await applySql(setupPool, readMigration(file));
     }
@@ -121,6 +125,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  await query('DELETE FROM attachments');
   await query('DELETE FROM notices');
   await query('DELETE FROM suggestions');
   await query('UPDATE users SET unit_id = NULL, managed_building_id = NULL');
@@ -128,6 +133,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
+  await query('DELETE FROM attachments');
   await query('DELETE FROM notices');
   await query('DELETE FROM suggestions');
   await query('UPDATE users SET unit_id = NULL, managed_building_id = NULL');
@@ -153,6 +159,7 @@ describe('GET /api/notices/[id] — 인증 사용자 공지 상세 (M5, REQ-NOTI
         author_id: string;
         created_at: string;
         updated_at: string;
+        attachments: Array<{ id: string; original_filename: string; mime_type: string; size_bytes: number }>;
       };
     };
     expect(body.success).toBe(true);
@@ -162,6 +169,9 @@ describe('GET /api/notices/[id] — 인증 사용자 공지 상세 (M5, REQ-NOTI
     expect(body.data.category_name).toBe('시설');
     expect(body.data.created_at).toBeDefined();
     expect(body.data.updated_at).toBeDefined();
+    // REQ-ATT-009/011: attachments[] 포함, storage_path 미노출
+    expect(Array.isArray(body.data.attachments)).toBe(true);
+    expect(body.data.attachments.length).toBe(0);
   });
 
   it('AC-021: 미존재 공지 UUID → 404', async () => {
@@ -354,6 +364,53 @@ describe('DELETE /api/notices/[id] — ADMIN 공지 영구 삭제 (M3, REQ-NOTIC
     const at = signAccessToken({ sub: admin.id, role: 'ADMIN', verified: true });
     const res = await deleteNotice('not-a-uuid', at);
     expect(res.status).toBe(400);
+  });
+});
+
+describe('GET /api/notices/[id] — attachments[] 응답 (SPEC-ATTACHMENT-001 REQ-ATT-009/011)', () => {
+  it('공지에 첨부 N개 → attachments[] 에 메타데이터 created_at ASC 정렬, storage_path 미노출', async () => {
+    const admin = await seedUser('admin-att-enrich@example.com', { role: 'ADMIN' });
+    const categoryId = await getCategoryId('시설');
+    const noticeIns = await query<{ id: string }>(
+      `INSERT INTO notices (author_id, category_id, title, content) VALUES ($1, $2, 't', 'c') RETURNING id`,
+      [admin.id, categoryId],
+    );
+    const noticeId = noticeIns.rows[0].id;
+    // 첨부 2행 직접 INSERT (created_at 순서 보장 위해 now() 간격)
+    const shaA = 'a'.repeat(64);
+    const shaB = 'b'.repeat(64);
+    await query(
+      `INSERT INTO attachments (target_type, target_id, uploader_id, original_filename, mime_type, size_bytes, storage_path, sha256)
+       VALUES ('NOTICE', $1, $2, 'first.png', 'image/png', 100, '/tmp/a.png', $3)`,
+      [noticeId, admin.id, shaA],
+    );
+    await query(
+      `INSERT INTO attachments (target_type, target_id, uploader_id, original_filename, mime_type, size_bytes, storage_path, sha256)
+       VALUES ('NOTICE', $1, $2, 'second.pdf', 'application/pdf', 200, '/tmp/b.pdf', $3)`,
+      [noticeId, admin.id, shaB],
+    );
+
+    const at = signAccessToken({ sub: admin.id, role: 'ADMIN', verified: true });
+    const res = await getNotice(noticeId, at);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      success: boolean;
+      data: {
+        attachments: Array<{
+          id: string;
+          original_filename: string;
+          mime_type: string;
+          size_bytes: number;
+          storage_path?: string;
+        }>;
+      };
+    };
+    expect(body.data.attachments.length).toBe(2);
+    expect(body.data.attachments[0].original_filename).toBe('first.png');
+    expect(body.data.attachments[1].original_filename).toBe('second.pdf');
+    expect(body.data.attachments[0].size_bytes).toBe(100);
+    // REQ-ATT-011: storage_path 미노출
+    expect(body.data.attachments[0].storage_path).toBeUndefined();
   });
 });
 

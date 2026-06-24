@@ -17,7 +17,7 @@
 
 import { withTransaction } from './db';
 import { sendKakaoLinkedNotification } from './kakao-email';
-import type { MailTransport } from './email';
+import type { MailTransport, NodemailerLoader } from './email';
 
 /** 카카오 ID 중복 연결 시 발생 (REQ-KAKAO-009, AC-KAKAO-019). 콜백이 409 로 변환. */
 export class KakaoConflictError extends Error {
@@ -53,8 +53,14 @@ export interface KakaoUpsertResult {
 
 /** upsertKakaoAccount 옵션. */
 export interface UpsertKakaoAccountOptions {
-  /** 알림 발송 전송기 (단위 테스트 주입용). 미주입 시 발송 생략. */
+  /**
+   * 알림 발송 전송기 (단위 테스트 주입용).
+   * 미주입 시 sendKakaoLinkedNotification 이 환경에 따라 자체 해석한다 (FIX-C1).
+   * 프로덕션 콜백은 transport 없이 호출하며, 이때 dev console 폴백 또는 prod SMTP 자체 생성된다.
+   */
   transport?: MailTransport;
+  /** 프로덕션 SMTP 경로 테스트용 nodemailer 로더 주입 (FIX-C1). */
+  smtpLoader?: NodemailerLoader;
 }
 
 /** DB 행을 KakaoUpsertUser 로 정규화. */
@@ -93,7 +99,7 @@ export async function upsertKakaoAccount(
   // 카카오가 대소문자 혼용 이메일을 반환해도 기존 소문자 계정과 정확히 매칭된다.
   const normalizedEmail = email.toLowerCase();
 
-  return withTransaction(async (client) => {
+  const result = await withTransaction(async (client) => {
     // 1. 이메일 기준 기존 사용자 조회
     const existingRes = await client.query<{
       id: string;
@@ -165,11 +171,7 @@ export async function upsertKakaoAccount(
         [kakaoId, existing.id],
       );
 
-      // 최초 연결 알림 발송 (REQ-KAKAO-017) — 정규화된 이메일 사용
-      if (opts.transport) {
-        await sendKakaoLinkedNotification(normalizedEmail, opts.transport);
-      }
-
+      // 알림은 트랜잭션 커밋 이후에 발송(FIX-C1) — DB 트랜잭션을 SMTP 지연으로 붙잡지 않음.
       return { user: toUpsertUser(updateRes.rows[0]), isNewLink: true };
     }
 
@@ -201,4 +203,24 @@ export async function upsertKakaoAccount(
 
     return { user: toUpsertUser(insertRes.rows[0]), isNewLink: false };
   });
+
+  // 최초 연결 알림 발송 (REQ-KAKAO-017) — 커밋 성공 후 best-effort.
+  // FIX-C1: 기존엔 if (opts.transport) 게이트로 막혀 프로덕션 콜백(transport 미주입)에서
+  // 알림이 데드코드였다. 이제 항상 발송을 시도하며, sendKakaoLinkedNotification 이
+  // 환경(dev console 폴백 / prod SMTP 자체 생성)에 따라 전송기를 해석한다.
+  // 알림 실패가 로그인을 차단하지 않도록 예외를 삼키고 로그만 남긴다 (best-effort).
+  if (result.isNewLink) {
+    try {
+      await sendKakaoLinkedNotification(normalizedEmail, {
+        transport: opts.transport,
+        smtpLoader: opts.smtpLoader,
+      });
+    } catch (err) {
+      // 알림은 부가 기능 — 로그인 자체는 성공으로 처리 (REQ-KAKAO-017 탈취 탐지 창이
+      // 일시적으로 누락되더라도 인증 플로우를 중단하지 않는다).
+      console.error('[kakao-linked] 최초 연결 알림 발송 실패 — 로그인은 계속 진행', err);
+    }
+  }
+
+  return result;
 }

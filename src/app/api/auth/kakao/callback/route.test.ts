@@ -199,6 +199,26 @@ describe('GET /api/auth/kakao/callback (T-008)', () => {
       const reason = new URL(location).searchParams.get('reason') ?? '';
       expect(reason).toContain('관리사무소');
     });
+
+    // FIX-W1: 일반 오류 분기(409/403 아닌 예외 — 예: DB 장애) 커버.
+    // route.ts 의 "카카오 로그인 중 오류가 발생했습니다" 분기는 기존에 테스트 미수행.
+    it('일반 Error(upsert DB 장애 등) 시 로그인 리다이렉트 + 제네릭 메시지 + 내부 오류 미노출 (FIX-W1)', async () => {
+      vi.mocked(exchangeKakaoToken).mockResolvedValue('tok');
+      vi.mocked(fetchKakaoUser).mockResolvedValue({ providerId: '1', email: 'db@example.com' });
+      // 409/403 이 아닌 일반 예외 — DB 연결 거부 등
+      upsertMock.mockRejectedValue(new Error('connection refused'));
+
+      const req = buildCallbackRequest('s', 's');
+      const res = await GET(req);
+
+      const location = res.headers.get('location') ?? '';
+      expect(location).toContain('/login');
+      const reason = new URL(location).searchParams.get('reason') ?? '';
+      expect(reason).toContain('카카오 로그인 중 오류가 발생했습니다');
+      // 내부 예외 메시지가 URL 로 누출되지 않아야 함 (정보 누출 방지)
+      expect(location).not.toContain('connection');
+      expect(location).not.toContain('refused');
+    });
   });
 
   describe('AC-KAKAO-014: 카카오 토큰 콘솔 미출력 (REQ-KAKAO-013)', () => {

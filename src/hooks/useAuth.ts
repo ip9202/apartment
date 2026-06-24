@@ -20,6 +20,7 @@ import {
   type ReactNode,
   createElement,
 } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   login,
   logout,
@@ -115,6 +116,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loading: true,
     error: null,
   });
+
+  // FIX-C2: 카카오 콜백 실패 사유 노출.
+  // 콜백은 실패 시 /login?error=kakao&reason=<한글 메시지> 로 리다이렉트한다.
+  // 3개 뷰포트 컴포넌트는 state.error 만 렌더링하므로, AuthProvider 가 마운트 시
+  // 쿼리 파라미터를 읽어 state.error 로 반영하면 모든 뷰포트에 자동 표시된다.
+  // reason 값은 이미 사용자 친화적 한국어(redirectToLogin 이 전체 메시지를 전달).
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const errorKind = searchParams.get('error');
+    const reason = searchParams.get('reason');
+    if (errorKind === 'kakao' && reason) {
+      setState((prev) => ({ ...prev, error: reason, loading: false }));
+    }
+  }, [searchParams]);
 
   /**
    * 로그인 액션.
@@ -237,7 +252,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
    * 세션 새로고침 (refresh).
    */
   const refreshAction = useCallback(async () => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
+    // FIX-C2: error 를 무조건 null 로 초기화하지 않음 — 카카오 콜백 사유가
+    // 세션 복원 진입부에 의해 덮어쓰기되는 것을 방지.
+    setState((prev) => ({ ...prev, loading: true }));
 
     const result = await getMe();
 
@@ -254,12 +271,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         error: null,
       });
     } else {
-      // 인증되지 않은 경우 -> 상태 클리어
-      setState({
+      // 인증되지 않은 경우 -> user/loading 클리어.
+      // 단, FIX-C2 로 설정된 카카오 오류 사유(error) 는 보존 —
+      // 세션 복원 실패가 콜백 실패 메시지를 덮어쓰지 않도록 한다.
+      setState((prev) => ({
         user: null,
         loading: false,
-        error: null,
-      });
+        error: prev.error,
+      }));
     }
   }, []);
 

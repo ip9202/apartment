@@ -150,6 +150,88 @@ describe('upsertKakaoAccount (T-005)', () => {
       expect(msgArg.subject).toContain('카카오');
       expect(msgArg.text).toContain('연결');
     });
+
+    // C1 회귀 테스트 (FIX SPEC-AUTH-KAKAO-001): transport 미주입 시에도 알림은 발생해야 한다.
+    // 프로덕션 콜백은 upsertKakaoAccount(email, providerId) 로 transport 없이 호출한다.
+    // 기존 버그: if (opts.transport) 게이트로 인해 transport 미주입 시 알림이 데드코드가 됨.
+    it('transport 미주입(프로덕션 콜백 경로) 시에도 최초 연결 알림이 발생한다 (REQ-KAKAO-017, FIX-C1)', async () => {
+      // dev/test 환경 폴백(console.log) 발생을 감지하여 알림 코드 경로가 실행됐음을 증명.
+      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+      clientQueryMock.mockResolvedValueOnce({
+        rows: [
+          {
+            id: 'uid2',
+            email: 'notrans@example.com',
+            provider: 'email',
+            provider_id: null,
+            password_hash: 'h',
+            role: 'RESIDENT',
+            verified_at: null,
+            status: 'ACTIVE',
+          },
+        ],
+        rowCount: 1,
+      });
+      clientQueryMock.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+      clientQueryMock.mockResolvedValueOnce({
+        rows: [{ id: 'uid2', email: 'notrans@example.com', role: 'RESIDENT', verified_at: null, status: 'ACTIVE' }],
+        rowCount: 1,
+      });
+
+      // transport 미주입 — 프로덕션 콜백과 동일 호출 형태
+      const result = await upsertKakaoAccount('notrans@example.com', '777');
+
+      expect(result.isNewLink).toBe(true);
+      // dev 폴백 알림이 발생했는지 확인 (kakao-email dev-fallback 마커)
+      const logged = consoleSpy.mock.calls.some((c) =>
+        String(c).includes('kakao-linked') || String(c).includes('알림'),
+      );
+      expect(logged).toBe(true);
+
+      consoleSpy.mockRestore();
+    });
+
+    // C1 보강: 알림 발송 자체가 실패해도 로그인은 차단되지 않는다 (best-effort).
+    it('알림 발송 실패 시에도 upsert 결과는 정상 반환된다 (REQ-KAKAO-017 best-effort, FIX-C1)', async () => {
+      // 프로덕션 SMTP 경로를 createSmtpTransport 실패로 시뮬레이션하기 위해
+      // NODE_ENV=production + transport 미주입 + SMTP 미설정 → createSmtpTransport throw.
+      const prevEnv = process.env.NODE_ENV;
+      (process.env as { NODE_ENV: string }).NODE_ENV = 'production';
+      const consoleErr = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      clientQueryMock.mockResolvedValueOnce({
+        rows: [
+          {
+            id: 'uid3',
+            email: 'fail@example.com',
+            provider: 'email',
+            provider_id: null,
+            password_hash: 'h',
+            role: 'RESIDENT',
+            verified_at: null,
+            status: 'ACTIVE',
+          },
+        ],
+        rowCount: 1,
+      });
+      clientQueryMock.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+      clientQueryMock.mockResolvedValueOnce({
+        rows: [{ id: 'uid3', email: 'fail@example.com', role: 'RESIDENT', verified_at: null, status: 'ACTIVE' }],
+        rowCount: 1,
+      });
+
+      // 알림 실패(SMTP 설정 누락)해도 예외가 사용자에게 전파되지 않아야 함
+      const result = await upsertKakaoAccount('fail@example.com', '555');
+
+      expect(result.isNewLink).toBe(true);
+      expect(result.user.id).toBe('uid3');
+      // 실패 로그가 기록됨 (운영자 가시성)
+      expect(consoleErr).toHaveBeenCalled();
+
+      (process.env as { NODE_ENV: string }).NODE_ENV = prevEnv ?? '';
+      consoleErr.mockRestore();
+    });
   });
 
   describe('(c) 동일 이메일 + 동일 provider_id → 멱등 재로그인', () => {

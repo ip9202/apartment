@@ -18,7 +18,7 @@
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { query } from '../../../../lib/db';
+import { query, withTransaction } from '../../../../lib/db';
 import { verifyAccessToken } from '../../../../lib/auth';
 import {
   requireAdmin,
@@ -27,6 +27,7 @@ import {
   notFound,
   validationError,
 } from '../../../../lib/rbac';
+import { removeAttachmentBinary } from '../../../../lib/attachments-storage';
 
 /** UUID v4 정규식 (validators.ts idiom 일관 — z.string().uuid() deprecated). */
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -104,7 +105,28 @@ export async function GET(request: Request, ctx: NoticeParams): Promise<Response
     return notFound('존재하지 않는 공지입니다');
   }
 
-  return NextResponse.json({ success: true, data: row }, { status: 200 });
+  // 첨부 메타데이터 조회 (SPEC-ATTACHMENT-001 REQ-ATT-009/011) — storage_path 미노출
+  const attRes = await query<{
+    id: string;
+    original_filename: string;
+    mime_type: string;
+    size_bytes: string;
+    created_at: string;
+  }>(
+    `SELECT id, original_filename, mime_type, size_bytes, created_at
+     FROM attachments WHERE target_type = 'NOTICE' AND target_id = $1
+     ORDER BY created_at ASC`,
+    [noticeId],
+  );
+  const attachments = attRes.rows.map((a) => ({
+    id: a.id,
+    original_filename: a.original_filename,
+    mime_type: a.mime_type,
+    size_bytes: Number(a.size_bytes),
+    created_at: a.created_at,
+  }));
+
+  return NextResponse.json({ success: true, data: { ...row, attachments } }, { status: 200 });
 }
 
 /**
@@ -228,8 +250,34 @@ export async function DELETE(request: Request, ctx: NoticeParams): Promise<Respo
     return notFound('존재하지 않는 공지입니다');
   }
 
-  // 4. Hard delete — 영구 삭제 (REQ-NOTICE-008)
-  await query('DELETE FROM notices WHERE id = $1', [noticeId]);
+  // 4. Hard delete — 영구 삭제 (REQ-NOTICE-008) + 첨부 cascade (REQ-ATT-026)
+  //    트랜잭션 내에서 attachments 행 SELECT(storage_path) → DELETE → notice DELETE.
+  //    디스크 파일 제거는 post-commit best-effort (CRITICAL #1 cascade 정책).
+  let pathsToDelete: string[] = [];
+  try {
+    pathsToDelete = await withTransaction(async (client) => {
+      const delRes = await client.query<{ storage_path: string }>(
+        `DELETE FROM attachments WHERE target_type = 'NOTICE' AND target_id = $1 RETURNING storage_path`,
+        [noticeId],
+      );
+      await client.query('DELETE FROM notices WHERE id = $1', [noticeId]);
+      return delRes.rows.map((r) => r.storage_path);
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: { code: 'DELETE_FAILED', message: '공지 삭제 중 오류가 발생했습니다' } },
+      { status: 500 },
+    );
+  }
+
+  // post-commit best-effort 디스크 정리 (실패 시 로그만, 고아 파일은 REQ-ATT-016 모니터링)
+  for (const p of pathsToDelete) {
+    try {
+      removeAttachmentBinary(p);
+    } catch (err) {
+      console.error(`[attachments] cascade 디스크 제거 실패 (REQ-ATT-026): path=${p}`, err);
+    }
+  }
 
   return NextResponse.json({ success: true, data: null }, { status: 200 });
 }

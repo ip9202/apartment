@@ -367,6 +367,61 @@ describe('DELETE /api/notices/[id] — ADMIN 공지 영구 삭제 (M3, REQ-NOTIC
   });
 });
 
+describe('DELETE /api/notices/[id] — attachments cascade (SPEC-ATTACHMENT-001 REQ-ATT-026)', () => {
+  it('공지 영구 삭제 시 첨부 DB 행 + 디스크 파일 일괄 제거', async () => {
+    const admin = await seedUser('admin-cascade@example.com', { role: 'ADMIN' });
+    const categoryId = await getCategoryId('시설');
+    const noticeIns = await query<{ id: string }>(
+      `INSERT INTO notices (author_id, category_id, title, content) VALUES ($1, $2, 't', 'c') RETURNING id`,
+      [admin.id, categoryId],
+    );
+    const noticeId = noticeIns.rows[0].id;
+
+    // 디스크 파일 2개 생성 + attachments 행 INSERT
+    const { writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = tmpdir();
+    const path1 = join(dir, `casc1-${Math.random()}.png`);
+    const path2 = join(dir, `casc2-${Math.random().toString(36).slice(2)}.pdf`);
+    writeFileSync(path1, 'a');
+    writeFileSync(path2, 'b');
+    const sha1 = '1'.repeat(64);
+    const sha2 = '2'.repeat(64);
+    await query(
+      `INSERT INTO attachments (target_type, target_id, uploader_id, original_filename, mime_type, size_bytes, storage_path, sha256)
+       VALUES ('NOTICE', $1, $2, 'a.png', 'image/png', 1, $3, $4)`,
+      [noticeId, admin.id, path1, sha1],
+    );
+    await query(
+      `INSERT INTO attachments (target_type, target_id, uploader_id, original_filename, mime_type, size_bytes, storage_path, sha256)
+       VALUES ('NOTICE', $1, $2, 'b.pdf', 'application/pdf', 1, $3, $4)`,
+      [noticeId, admin.id, path2, sha2],
+    );
+
+    const at = signAccessToken({ sub: admin.id, role: 'ADMIN', verified: true });
+    const { existsSync, rmSync } = await import('node:fs');
+    expect(existsSync(path1)).toBe(true);
+    expect(existsSync(path2)).toBe(true);
+
+    const res = await deleteNotice(noticeId, at);
+    expect(res.status).toBe(200);
+
+    // DB 행 제거
+    const cnt = await query<{ n: string }>(
+      'SELECT COUNT(*)::text AS n FROM attachments WHERE target_type = $1 AND target_id = $2',
+      ['NOTICE', noticeId],
+    );
+    expect(cnt.rows[0].n).toBe('0');
+    // 디스크 파일 제거 (post-commit best-effort)
+    expect(existsSync(path1)).toBe(false);
+    expect(existsSync(path2)).toBe(false);
+    // cleanup 만약
+    rmSync(path1, { force: true });
+    rmSync(path2, { force: true });
+  });
+});
+
 describe('GET /api/notices/[id] — attachments[] 응답 (SPEC-ATTACHMENT-001 REQ-ATT-009/011)', () => {
   it('공지에 첨부 N개 → attachments[] 에 메타데이터 created_at ASC 정렬, storage_path 미노출', async () => {
     const admin = await seedUser('admin-att-enrich@example.com', { role: 'ADMIN' });

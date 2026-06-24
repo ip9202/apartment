@@ -522,4 +522,43 @@ describe('DELETE /api/suggestions/[id] — 건의 아카이브 (M3, REQ-SUGGEST-
     const res = await deleteSuggestion(null, sid);
     expect(res.status).toBe(401);
   });
+
+  it('REQ-ATT-027: 아카이브 시 첨부 DB 행 + 디스크 파일 일괄 제거 (건의 행은 보존)', async () => {
+    const a101 = await getUnitId('A동', '101');
+    const categoryId = await getCategoryId('시설');
+    const author = await seedUser('cascade-sugg@example.com', { role: 'RESIDENT', unitId: a101 });
+    const sid = await seedSuggestion({ authorId: author.id, unitId: a101, title: 'c', isPublic: true, categoryId });
+
+    // 디스크 파일 생성
+    const { writeFileSync, existsSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const path1 = join(tmpdir(), `scasc-${Math.random().toString(36).slice(2)}.png`);
+    writeFileSync(path1, 'x');
+    const sha = '9'.repeat(64);
+    await query(
+      `INSERT INTO attachments (target_type, target_id, uploader_id, original_filename, mime_type, size_bytes, storage_path, sha256)
+       VALUES ('SUGGEST', $1, $2, 's.png', 'image/png', 1, $3, $4)`,
+      [sid, author.id, path1, sha],
+    );
+
+    const at = signAccessToken({ sub: author.id, role: 'RESIDENT', verified: true });
+    expect(existsSync(path1)).toBe(true);
+
+    const res = await deleteSuggestion(at, sid);
+    expect(res.status).toBe(200);
+
+    // 첨부 DB 행 제거
+    const cnt = await query<{ n: string }>(
+      'SELECT COUNT(*)::text AS n FROM attachments WHERE target_type = $1 AND target_id = $2',
+      ['SUGGEST', sid],
+    );
+    expect(cnt.rows[0].n).toBe('0');
+    // 디스크 파일 제거
+    expect(existsSync(path1)).toBe(false);
+    // 건의 행은 보존 (archived)
+    const srow = await query<{ archived: boolean }>('SELECT archived FROM suggestions WHERE id = $1', [sid]);
+    expect(srow.rows[0].archived).toBe(true);
+    rmSync(path1, { force: true });
+  });
 });

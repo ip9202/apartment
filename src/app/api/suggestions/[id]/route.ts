@@ -18,9 +18,10 @@
 
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { query } from '../../../../lib/db';
+import { query, withTransaction } from '../../../../lib/db';
 import { badRequest, notFound, forbidden, conflict, validationError } from '../../../../lib/rbac';
 import { requireAuthenticated, suggestForbidden, canAccessPrivate } from '../../../../lib/suggest-rbac';
+import { removeAttachmentBinary } from '../../../../lib/attachments-storage';
 
 /** UUID v4 정규식 (zod 4 deprecated z.string().uuid() 대체). */
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -272,12 +273,42 @@ export async function DELETE(request: Request, ctx: SuggestionParams): Promise<R
   }
 
   // 6. 아카이브 전환 — 익명화 + archived=true + archived_at=now. unit_id 미건드림 (ADR-005)
-  await query(
-    `UPDATE suggestions
-     SET archived = true, author_id = NULL, author_label = '전 입주민', archived_at = now()
-     WHERE id = $1`,
-    [suggestionId],
-  );
+  //    첨부 cascade (REQ-ATT-027) — 트랜잭션 내 SELECT storage_path + DELETE attachments + archive UPDATE.
+  //    디스크 파일 제거는 post-commit best-effort (CRITICAL #1 cascade 정책).
+  let pathsToDelete: string[] = [];
+  try {
+    pathsToDelete = await withTransaction(async (client) => {
+      const pathsRes = await client.query<{ storage_path: string }>(
+        `SELECT storage_path FROM attachments WHERE target_type = 'SUGGEST' AND target_id = $1`,
+        [suggestionId],
+      );
+      await client.query(
+        `DELETE FROM attachments WHERE target_type = 'SUGGEST' AND target_id = $1`,
+        [suggestionId],
+      );
+      await client.query(
+        `UPDATE suggestions
+         SET archived = true, author_id = NULL, author_label = '전 입주민', archived_at = now()
+         WHERE id = $1`,
+        [suggestionId],
+      );
+      return pathsRes.rows.map((r) => r.storage_path);
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: { code: 'ARCHIVE_FAILED', message: '건의 아카이브 중 오류가 발생했습니다' } },
+      { status: 500 },
+    );
+  }
+
+  // post-commit best-effort 디스크 정리
+  for (const p of pathsToDelete) {
+    try {
+      removeAttachmentBinary(p);
+    } catch (err) {
+      console.error(`[attachments] cascade 디스크 제거 실패 (REQ-ATT-027): path=${p}`, err);
+    }
+  }
 
   return NextResponse.json({ success: true, data: null }, { status: 200 });
 }

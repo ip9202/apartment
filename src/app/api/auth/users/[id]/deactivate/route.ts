@@ -37,6 +37,7 @@
 import { NextResponse } from 'next/server';
 import { query, withTransaction } from '../../../../../../lib/db';
 import { verifyAccessToken } from '../../../../../../lib/auth';
+import { removeAttachmentBinary } from '../../../../../../lib/attachments-storage';
 
 /** Next.js 15 동적 라우트 params 타입 (Promise). */
 interface DeactivateParams {
@@ -114,8 +115,10 @@ export async function POST(request: Request, ctx: DeactivateParams): Promise<Res
   // 9. REQ-AUTH-014 원자적 트랜잭션 (AC-024 ROLLBACK)
   //    a. users 갱신 (status, role 환원, unit/verified/managed 해제)
   //    b. suggestions 아카이브 (ADR-005: unit_id 보존, author_id 만 NULL)
+  //    c. REQ-ATT-028: 탈퇴자 업로드 첨부 cascade — DB 행 + storage_path 수집
+  let attachmentPaths: string[] = [];
   try {
-    await withTransaction(async (client) => {
+    attachmentPaths = await withTransaction(async (client) => {
       await client.query(
         `UPDATE users
          SET status = 'INACTIVE',
@@ -134,6 +137,16 @@ export async function POST(request: Request, ctx: DeactivateParams): Promise<Res
          WHERE author_id = $1`,
         [targetId],
       );
+      // REQ-ATT-028: 탈퇴자가 업로드한 첨부 — storage_path 수집 후 행 삭제 (디스크는 post-commit).
+      const pathsRes = await client.query<{ storage_path: string }>(
+        `SELECT storage_path FROM attachments WHERE uploader_id = $1`,
+        [targetId],
+      );
+      await client.query(
+        `DELETE FROM attachments WHERE uploader_id = $1`,
+        [targetId],
+      );
+      return pathsRes.rows.map((r) => r.storage_path);
     });
   } catch {
     // AC-024: 트랜잭션 실패 → withTransaction 이 ROLLBACK 후 재전파 → 500
@@ -144,6 +157,15 @@ export async function POST(request: Request, ctx: DeactivateParams): Promise<Res
       },
       { status: 500 },
     );
+  }
+
+  // post-commit best-effort 디스크 정리 (REQ-ATT-028; 실패 시 로그만, 고아 파일은 REQ-ATT-016 모니터링)
+  for (const p of attachmentPaths) {
+    try {
+      removeAttachmentBinary(p);
+    } catch (err) {
+      console.error(`[attachments] cascade 디스크 제거 실패 (REQ-ATT-028): path=${p}`, err);
+    }
   }
 
   // 10. 200

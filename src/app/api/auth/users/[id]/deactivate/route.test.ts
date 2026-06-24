@@ -51,6 +51,12 @@ async function ensureSchemaAndSeed(): Promise<void> {
       '002_revoked_refresh_tokens.sql',
       '003_login_attempts.sql',
       '004_suggestions_minimal.sql',
+      '005_managed_building_unify.sql',
+      '006_notices.sql',
+      '007_suggestions_expand.sql',
+      '008_parking.sql',
+      '009_password_reset_tokens.sql',
+      '010_attachments.sql',
     ]) {
       await applySql(setupPool, readMigration(file));
     }
@@ -152,6 +158,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
+  await query('DELETE FROM attachments');
   await query('DELETE FROM suggestions');
   await query('DELETE FROM revoked_refresh_tokens');
   await query('DELETE FROM login_attempts');
@@ -160,6 +167,7 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
+  await query('DELETE FROM attachments');
   await query('DELETE FROM suggestions');
   await query('DELETE FROM revoked_refresh_tokens');
   await query('DELETE FROM login_attempts');
@@ -372,5 +380,65 @@ describe('POST /api/auth/users/[id]/deactivate — 강제 탈퇴 (TASK-AUTH-013)
       target.id,
     ]);
     expect(t.rows[0].status).toBe('ACTIVE');
+  });
+
+  it('REQ-ATT-028: 강제 탈퇴 시 탈퇴자 업로드 첨부 DB 행 + 디스크 파일 일괄 제거', async () => {
+    const admin = await seedUser('casc-admin@example.com', { role: 'ADMIN' });
+    const target = await seedUser('casc-target@example.com', { role: 'RESIDENT' });
+    // 첨부 1행 + 디스크 파일 생성 (target 이 업로드한 것으로)
+    const { writeFileSync, existsSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const path1 = join(tmpdir(), `dcasc-${Math.random().toString(36).slice(2)}.png`);
+    writeFileSync(path1, 'z');
+    const sha = '7'.repeat(64);
+    await query(
+      `INSERT INTO attachments (target_type, target_id, uploader_id, original_filename, mime_type, size_bytes, storage_path, sha256)
+       VALUES ('NOTICE', $1, $2, 'd.png', 'image/png', 1, $3, $4)`,
+      ['00000000-0000-0000-0000-000000000099', target.id, path1, sha],
+    );
+
+    const at = signAccessToken({ sub: admin.id, role: 'ADMIN', verified: true });
+    const res = await postDeactivate(target.id, at);
+    expect(res.status).toBe(200);
+
+    // 탈퇴자 업로드 첨부 DB 행 제거
+    const cnt = await query<{ n: string }>(
+      'SELECT COUNT(*)::text AS n FROM attachments WHERE uploader_id = $1',
+      [target.id],
+    );
+    expect(cnt.rows[0].n).toBe('0');
+    // 디스크 파일 제거
+    expect(existsSync(path1)).toBe(false);
+    rmSync(path1, { force: true });
+  });
+
+  it('ADR-005 명시: deactivate 는 suggestions.unit_id 를 보존한다 (첨부 cascade 추가 후에도 불변)', async () => {
+    const admin = await seedUser('unit-admin@example.com', { role: 'ADMIN' });
+    const target = await seedUser('unit-target@example.com', { role: 'RESIDENT' });
+    // target 에 unit_id 부여
+    const unitRes = await query<{ id: string }>('SELECT id FROM units LIMIT 1');
+    const unitId = unitRes.rows[0].id;
+    await query('UPDATE users SET unit_id = $1 WHERE id = $2', [unitId, target.id]);
+    // target 의 건의 생성 (unit_id 귀속)
+    const catRes = await query<{ id: string }>('SELECT id FROM suggestion_categories LIMIT 1');
+    await query(
+      `INSERT INTO suggestions (author_id, author_label, unit_id, category_id, title, content, is_public, status, archived)
+       VALUES ($1, '입주민', $2, $3, 't', 'c', true, '접수', false)`,
+      [target.id, unitId, catRes.rows[0].id],
+    );
+
+    const at = signAccessToken({ sub: admin.id, role: 'ADMIN', verified: true });
+    const res = await postDeactivate(target.id, at);
+    expect(res.status).toBe(200);
+
+    // 건의 unit_id 보존 (ADR-005)
+    const srow = await query<{ unit_id: string; archived: boolean; author_id: string | null }>(
+      'SELECT unit_id, archived, author_id FROM suggestions WHERE author_id IS NULL AND unit_id = $1',
+      [unitId],
+    );
+    expect(srow.rowCount).toBe(1);
+    expect(srow.rows[0].unit_id).toBe(unitId);
+    expect(srow.rows[0].archived).toBe(true);
   });
 });

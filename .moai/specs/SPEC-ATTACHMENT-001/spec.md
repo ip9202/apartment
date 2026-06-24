@@ -1,7 +1,7 @@
 ---
 id: "SPEC-ATTACHMENT-001"
 version: "0.1.0"
-status: "Draft"
+status: "Completed"
 created: "2026-06-24"
 updated: "2026-06-24"
 author: "강력쇠주먹"
@@ -18,6 +18,7 @@ issue_number: 0
 ## HISTORY
 
 - **2026-06-24**: 최초 작성 (강력쇠주먹). 확정 결정 5종 반영: (1) **저장소 = 로컬 파일시스템**, 경로는 환경변수 `ATTACHMENTS_DIR`(기본 `./public/uploads`). 단, 로컬 파일시스템은 영구 볼륨(self-hosted / VPS / Docker volume / Railway Volume)을 전제로 한다 — Vercel(ephemeral filesystem) 배포 시 재배포마다 파일이 소실되므로 비권장. 완화책으로 파일 메타데이터는 DB에 저장하고 바이너리만 디스크에 두어, 향후 클라우드 스토리지(S3/Supabase Storage) 이전 시 저장소 계층만 교체하면 DB는 동일하게 유지된다. (2) **허용 파일 = 이미지(PNG/JPG/JPEG/WEBP) + 문서(PDF/HWP/DOCX)**, 파일당 최대 10MB, 게시물당 최대 5개. 화이트리스트 MIME + 확장자 + 매직 바이트(최소한 signature) 교차 검증. (3) **접근 제어 = 기존 SUGGEST 가시성 매트릭스 재사용** — NOTICE 첨부는 모든 인증 사용자가 읽기 가능; SUGGEST 첨부는 건의 가시성(공개=인증 사용자, 비공개=작성자+담당동 REP+CHAIR+ADMIN)을 따른다; 업로드/편집/삭제는 NOTICE=ADMIN, SUGGEST=작성자 본인+ADMIN. (4) **구조 = 단일 SPEC-ATTACHMENT-001 + 단일 `attachments` 테이블**(다형성 target: `target_type NOTICE|SUGGEST` + `target_id`), 두 개의 FK 테이블이 아님 — 근거는 §10 설계 노트. (5) **삭제 cascade** — 공지 영구 삭제(NOTICE hard delete), 건의 아카이브(SUGGEST archive 익명화), AUTH 강제 탈퇴(deactivate) 시 첨부파일 메타데이터 + 디스크 바이너리가 일관되게 정리된다.
+- **2026-06-24**: 구현 완료 (강력쇠주먹, PR #3). migration 010 + `src/lib/attachments-{storage,validation,upload}.ts` + 4개 엔드포인트 구현. NOTICE/SUGGEST 상세 응답에 `attachments[]` 포함, cascade 정리(NOTICE hard delete / SUGGEST archive / AUTH deactivate post-commit best-effort) 적용. status Draft → Completed.
 
 ---
 
@@ -384,7 +385,7 @@ CREATE INDEX IF NOT EXISTS idx_attachments_uploader_id
 > run phase 시작 전 orchestrator가 확인해야 할 항목.
 
 1. **[가정] 배포 환경 = Railway Volume(영구 볼륨)**: `.moai/project/tech.md` 명시 기준. Vercel 배포로 전환 시 본 SPEC의 로컬 파일시스템 접근은 무효 — 클라우드 스토리지 SPEC 선행 필요. run phase에서 `ATTACHMENTS_DIR` 환경변수가 영구 볼륨 경로인지 확인 권장.
-2. **[가정] Next.js body size limit**: 10MB 파일 업로드를 위해 Next.js App Router의 기본 multipart body 크기 제한(보통 4MB)을 상향해야 할 수 있음. run phase에서 `next.config` 또는 route segment config `export const api = { bodyParser: { sizeLimit: '10mb' } }` 확인 필요(Next.js 15 App Router 방식은 다를 수 있음 — 구현 시 검증).
+2. **[해결됨] Next.js body size limit**: 10MB 파일 업로드를 위해 Next.js App Router의 기본 multipart body 크기 제한(보통 4MB)을 상향해야 할 수 있음. run phase에서 `next.config` 또는 route segment config `export const api = { bodyParser: { sizeLimit: '10mb' } }` 확인 필요(Next.js 15 App Router 방식은 다를 수 있음 — 구현 시 검증). **→ 구현 결과 (2026-06-24)**: App Router Route Handlers는 Pages Router의 `bodyParser` config를 사용하지 않음. `export const api = { bodyParser: {...} }`는 Pages Router 전용 구문이며 App Router에서는 무효. 10MB 제한은 애플리케이션 계층(REQ-ATT-023, `attachments-validation.ts`에서 `size_bytes <= 10485760` 검증)에서 강제하므로 `next.config` 변경은 불필요. 해결됨.
 3. **[열린 질문] HWP magic byte**: HWP 파일의 매직 바이트 시그니처가 공식적으로 표준화되어 있지 않음(`HWP Document File` 시그니처는 있으나 버전별 상이). run phase에서 HWP 검증 전략(확장자 + 느슨한 시그니처 또는 확장자만) 확정 필요. 본 SPEC은 "최소한의 시그니처 교차 검증"을 요구하되 HWP는 예외적으로 확장자 우선 검증 허용 가능.
 4. **[가정] AUDITOR 건의 첨부**: SPEC-SUGGEST-001 Known limitations에 따라 AUDITOR는 RESIDENT 동일 취급(공개+본인비공개 열람). 본 SPEC도 동일 정책 적용. AUDITOR 공개 건의 첨부 다운로드 허용.
 5. **[열린 질문] 첨부 삭제 시 sha256 재검증**: 다운로드 시 저장된 sha256과 디스크 파일 해시를 재비교할지(무결성 강화) 또는 업로드 시 1회만 계산(성능 우선). 본 SPEC은 업로드 시 1회 계산 + 저장만 명시(REQ-ATT-029). 다운로드 재검증은 Out-of-Scope.
@@ -419,4 +420,4 @@ CREATE INDEX IF NOT EXISTS idx_attachments_uploader_id
 
 ---
 
-*본 SPEC은 plan phase 산출물이다. run phase에서 `migrations/010_attachments.sql` 및 첨부 엔드포인트 구현이 이루어지며, 기존 NOTICE/SUGGEST/AUTH-deactivate route에 cascade 훅이 추가된다(brownfield 수정 — 기존 테스트 회귀 주의).*
+*본 SPEC은 구현 완료 상태이다(2026-06-24, PR #3). `migrations/010_attachments.sql` 및 첨부 엔드포인트가 구현되었으며, 기존 NOTICE/SUGGEST/AUTH-deactivate route에 cascade 정리가 추가되었다. status: Completed.*

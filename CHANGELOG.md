@@ -16,6 +16,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Rate Limiting (이메일/IP 3회/10분)
   - 사용자 열거 공격 방지 (통일 응답)
   - 세션 무효화 (비밀번호 변경 후 RT 블랙리스트)
+- 공지/건의 첨부파일 기능 (SPEC-ATTACHMENT-001)
+  - `POST /api/notices/[id]/attachments` 엔드포인트: 공지 첨부 업로드 (ADMIN)
+  - `POST /api/suggestions/[id]/attachments` 엔드포인트: 건의 첨부 업로드 (작성자 본인 + ADMIN)
+  - `GET /api/attachments/[id]` 엔드포인트: 첨부 다운로드/스트리밍 (대상 게시물 가시성 재검증)
+  - `DELETE /api/attachments/[id]` 엔드포인트: 첨부 삭제 (NOTICE=ADMIN, SUGGEST=작성자 본인+ADMIN)
+  - 다형성 `attachments` 테이블 (migration 010, target_type NOTICE|SUGGEST)
+  - 파일 검증: PNG/JPG/JPEG/WEBP + PDF/HWP/DOCX 화이트리스트, 파일당 10MB, 게시물당 5개, 매직 바이트 교차 검증
+  - cascade 삭제: NOTICE 영구 삭제 / SUGGEST 아카이브 / AUTH 강제 탈퇴 시 첨부 정리
+
+### Security
+- OWASP Top 10 준수 (A01: Injection, A02: Broken Auth, A03: Crypto, A07: Identification, A09: Logging)
+- crypto.randomBytes(32) CSPRNG 토큰 생성
+- 파라미터화 쿼리 (SQL Injection 방지)
+- 일회용 토큰 보장 (used_at 추적)
+- 첨부파일 경로 순회 방어 (UUID 기반 storage_path, 파일명 새니타이제이션)
+- 첨부 MIME 스푸핑 방어 (매직 바이트 시그니처 교차 검증)
+- 첨부 다운로드 권한 재검증 (직접 링크 공격 방지)
 
 ### Security
 - OWASP Top 10 준수 (A01: Injection, A02: Broken Auth, A03: Crypto, A07: Identification, A09: Logging)

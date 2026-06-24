@@ -11,6 +11,7 @@
 - ✅ **SUGGEST P0 완료** (SPEC-SUGGEST-001): 건의/문의 등록/수정/아카이브/열람/답변/상태/호수이력 (2026-06-22)
 - ✅ **PARKING P0 완료** (SPEC-PARKING-001): 주차 자리 배정 추첨 시스템 (2026-06-23)
 - ✅ **AUTH-RESET P0 완료** (SPEC-AUTH-RESET-001): 비밀번호 재설정 (이메일 링크) (2026-06-24)
+- ✅ **ATTACHMENT P0 완료** (SPEC-ATTACHMENT-001): 공지/건의 첨부파일 (2026-06-24)
 
 ## 프로젝트 문서
 
@@ -61,6 +62,12 @@
 - `POST /api/suggestions/[id]/replies` - 답변 등록 (ADMIN)
 - `PUT /api/suggestions/[id]/status` - 상태 변경 (ADMIN, 화이트리스트 전이 검증)
 - `GET /api/suggestions/units/[building]/[unit]` - 호수별 건의 이력 (ADMIN/CHAIR, 아카이브 포함)
+
+### 첨부파일 (ATTACHMENT)
+- `POST /api/notices/[id]/attachments` - 공지 첨부 업로드 (ADMIN)
+- `POST /api/suggestions/[id]/attachments` - 건의 첨부 업로드 (작성자 본인 + ADMIN)
+- `GET /api/attachments/[id]` - 첨부 다운로드/스트리밍 (대상 게시물 가시성 준거)
+- `DELETE /api/attachments/[id]` - 첨부 삭제 (NOTICE=ADMIN, SUGGEST=작성자 본인 + ADMIN)
 
 ### 주차 자리 배정 추첨 (PARKING)
 - `POST /api/parking/rounds` - 회차 생성 (ADMIN/CHAIR, 자리풀 동적 입력, seed 자동생성)

@@ -19,8 +19,16 @@
   - File impact: 4 new + 7 modified
   - Architecture decisions: React Context, AT ref caching, jose verification
 
-- Decision Point 1: ⏸️ PAUSED (User requested postponement)
-  - Status: Awaiting user approval for implementation
-  - Next action: Re-run /moai run SPEC-INTEGRATION-AUTH-001 to resume
-  - Branch preserved: feature/SPEC-INTEGRATION-AUTH-001-auth
+- Decision Point 1: ✅ RESUMED & COMPLETE
+  - Implementation completed via TDD (RED-GREEN-REFACTOR)
+  - Squash-merged into develop (PR #1, commit b6cf5c6, 2026-06-23)
+  - 15 test cases passing (useAuth.test.ts 7 + lib/api/auth.test.ts 8)
+  - Source branch: feature/SPEC-INTEGRATION-AUTH-001-auth (squash-merged, safe to delete)
+
+## Final Status
+
+- SPEC Status: Complete (spec.md v1.1.0, status: Complete)
+- All 16 acceptance criteria verified (grep + runtime, 2026-06-24)
+- Note: progress.md was stale (PAUSED) after completion; corrected 2026-06-24
+- Note: /api/auth/me covered via src/lib/api/auth.test.ts (no dedicated route.test.ts)
 

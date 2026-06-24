@@ -14,6 +14,7 @@ issue_number: ""
 
 ## HISTORY
 
+- 2026-06-24 (후속 SPEC 완료 메모): 후속 SPEC **SPEC-AUTH-KAKAO-001 (Completed)** 가 카카오 OAuth 실구현을 완료함. 이에 따라 본 SPEC의 REQ-AUTH-INT-026(disabled stub 요구) 및 §3.2 Out of Scope, §8 Open Questions #2의 카카오 관련 기술은 **[SUPERSEDED]** 처리됨. 원문은 역사적 기록으로 보존.
 - 2026-06-23 (v1.1.0): 구현 완료. develop 브랜치로 머지됨 (PR #1, commit b6cf5c6). GET /api/auth/me 엔드포인트, useAuth 훅, 데모 계정 시드, 뷰포트 컴포넌트 연동 완료. 15개 테스트 케이스 통과.
 - 2026-06-23 (v1.0.0): 최초 작성. SPEC-AUTH-001 백엔드 인증 API 완료 이후, 데모용 하드코딩 로그인을 실제 API 호출로 교체하기 위한 연동 명세. 세션 복원 엔드포인트(`/api/auth/me`) 추가, 시드 데모 계정 추가, 공유 `useAuth` 훅 도입 포함.
 
@@ -80,6 +81,7 @@ issue_number: ""
 - 도메인 페이지(공지/건의/주차) 라우팅 분리 및 권한 게이트 — 별도 SPEC
 - 공지/건의/주차 실제 데이터 연동(wiring) — SPEC-NOTICE-001, SPEC-SUGGEST-001, SPEC-PARKING-001 후속
 - 카카오 소셜 로그인 실구현 (현재는 stub) — 별도 SPEC (Open Questions 참조)
+  - **[SUPERSEDED 2026-06-24 by SPEC-AUTH-KAKAO-001 (Completed)]** 카카오 소셜 로그인이 실구현 완료됨. 본 항목의 "현재는 stub" 기술은 역사적 기록으로 보존. `useAuth.kakaoLogin()` → `GET /api/auth/kakao` 흐름이 prod에 반영됨.
 - 비밀번호 재설정/찾기 플로우 — 별도 SPEC
 - RT 를 이용한 자동 갱신(silent refresh) UX 고도화 — 본 SPEC 은 `refresh` 엔드포인트 존재만 전제, 자동 갱신 로직은 Out of Scope
 - 운영 환경(prod) 계정 프로비저닝 — 본 SPEC 의 데모 계정은 개발/데모 전용
@@ -148,6 +150,9 @@ WHERE 가능한 경우, 데모용 빠른 로그인 버튼("입주민 체험", "�
 
 **REQ-AUTH-INT-026** (Unwanted Behavior):
 "카카오로 시작하기" 버튼은 비활성화(disabled) 처리하고 "준비 중" 라벨을 표시해야 하며(SHALL), 클릭 시 가짜 로그인(`doLogin('kakao@user.com','kakao')`)을 트리거하지 않아야 한다(SHALL NOT). 카카오 OAuth 실구현은 별도 SPEC(SPEC-AUTH-KAKAO-001)에서 다룬다.
+
+> **[SUPERSEDED 2026-06-24 by SPEC-AUTH-KAKAO-001 (Completed)]**
+> 카카오 버튼이 활성화되어 실구현됨. `useAuth.kakaoLogin()` → `/api/auth/kakao` 흐름이 prod에 반영되었으며, 3뷰포트(MobileApp/TabletApp/DesktopApp) 카카오 버튼이 모두 활성 상태로 교체됨. 본 REQ-AUTH-INT-026의 disabled/stub 요구와 가짜 로그인 금지 조항은 SPEC-AUTH-KAKAO-001 완료로 폐기(disabled 요구는 더 이상 적용되지 않음; 가짜 로그인 금지 조항은 자연스럽게 충족됨). 원문은 역사적 기록으로 보존.
 
 ### 4.5 오류 처리 (FE/BE)
 
@@ -239,7 +244,7 @@ WHILE 페이지 새로고침 시 `useAuth` 가 마운트되면, 시스템은 `/a
 > 구현 착수 전 사용자 결정이 필요한 항목. `plan.md` 작성 시 해소 필요.
 
 1. **데모 비밀번호 정책**: `test1234` 는 AUTH-001 의 `loginSchema` 최소 길이(8자)를 만족하는가? 비밀번호 복잡도 요구사항이 있다면 데모 계정도 준수해야 함. — 사용자 확인 필요.
-2. **카카오 로그인** (결정됨 2026-06-23): "카카오로 시작하기" 버튼은 **비활성화 + "준비 중" 표시**로 처리한다. 본 SPEC은 이메일 인증에 집중하며, 카카오 OAuth 실구현은 별도 SPEC(SPEC-AUTH-KAKAO-001)에서 다룬다. 데모 중 가짜 로그인(`doLogin('kakao@user.com','kakao')`)으로 인한 혼란을 방지한다. → REQ-AUTH-INT-026 참조.
+2. **카카오 로그인** (결정됨 2026-06-23): "카카오로 시작하기" 버튼은 **비활성화 + "준비 중" 표시**로 처리한다. 본 SPEC은 이메일 인증에 집중하며, 카카오 OAuth 실구현은 별도 SPEC(SPEC-AUTH-KAKAO-001)에서 다룬다. 데모 중 가짜 로그인(`doLogin('kakao@user.com','kakao')`)으로 인한 혼란을 방지한다. → REQ-AUTH-INT-026 참조. **[SUPERSEDED 2026-06-24 by SPEC-AUTH-KAKAO-001 (Completed)]** 카카오 로그인이 실구현 완료되어 버튼이 활성화됨. 원 결정은 역사적 기록으로 보존.
 3. **`/api/auth/me` 의 `status:"INACTIVE"` 회원 처리**: 200 을 반환하되 클라이언트가 강제 탈퇴 안내를 표시하는가(REQ-AUTH-INT-004), 아니면 401 로 통일할 것인가? — 사용자 확인 필요.
 4. **데모 계정 이메일 도메인**: `@aitteulak.com` 사용. 실제 프로덕션 도메인과 충돌하지 않는지? — 사용자 확인.
 5. **AT 메모리 캐시 방식**: `useAuth` 가 verify-unit 용 AT 를 어디에 보관하는가? (a) `/api/auth/me` 호출 응답에 AT 본문 포함시키기, (b) 로그인 응답의 `access_token` 을 메모리에 캐시. — (b) 가 보안상 더 안전(REQ-AUTH-INT-022). 설계 확정 필요.

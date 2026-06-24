@@ -2,7 +2,7 @@
 id: "SPEC-AUTH-KAKAO-001"
 title: "카카오 OAuth 2.0 소셜 로그인"
 version: "1.1.0"
-status: "Planned"
+status: "Completed"
 created: "2026-06-24"
 updated: "2026-06-24"
 author: "강력쇠주먹"
@@ -311,3 +311,37 @@ Run Phase에서 다음 @MX 태그를 적용한다:
 ---
 
 *본 SPEC은 brownfield 프로젝트 기준으로 작성되었다 (Delta 마커 사용).*
+
+---
+
+## 13. Implementation Notes (as-built, 2026-06-24)
+
+본 SPEC은 SPEC-First(Plan-Run-Sync) 워크플로우를 따라 구현 완료되었다. 아래는 구현 결과에서 계획 대비 주요 결정/차이점을 기록한 as-built 요약이다.
+
+### 13.1 PKCE 미도입 근거
+
+Authorization Code Flow에 PKCE를 적용하지 않았다. 근거:
+- 본 서버는 **confidential client**(client-secret 보유)이다.
+- **state 기반 CSRF 방어**(`crypto.randomUUID`, httpOnly·SameSite=Lax·Max-Age=600s 쿠키, 콜백 일회용 폐기) + **client-secret 환경 변수 전용 관리** 조합으로 인가 코드 가로채기 위협 시나리오를 충분히 완화한다.
+- 카카오 액세스/리프레시 토큰은 **1회성 교환 후 메모리에서만 사용**, DB/쿠키 영구 저장 금지 정책으로 리스크를 추가 축소했다.
+- 공개 클라이언트(SPA 네이티브 등)가 아니므로 PKCE의 필수 사용 케이스에 해당하지 않는다.
+
+### 13.2 이메일 정규화(소문자) 추가 — evaluator fix cycle
+
+구현 평가(evaluator-active) 단계에서 강화된 항목. 카카오 이메일과 기존 `users.email` 비교 시 **대소문자 정규화(소문자)** 를 적용했다 (REQ-KAKAO-007/017 강화). 이는 대소문자 혼용으로 인한 계정 연결 우회/중복 가입 시나리오를 차단한다.
+
+### 13.3 계획 대비 차이 (Divergence)
+
+- **`kakao-email.ts` 파일 분리**: 계획에는 최초 연결 알림 이메일 로직이 `kakao-account.ts`에 인라인으로 포함되어 있었다. 구현 시 DB upsert(`kakao-account.ts`)와 이메일 발송(`kakao-email.ts`) 관심사 분리를 위해 별도 파일로 분리했다.
+- **localhost 하드코딩 제거**: evaluator fix 중 운영 준비성(prod-readiness)을 위해 리다이렉트 URL 호스트를 `request.url` 기반 동적 생성으로 변경했다 (고정 localhost 제거).
+
+### 13.4 운영자 필수 사전 조건 (Operator Prerequisites)
+
+본 기능은 다음 사전 조건이 충족되어야 정상 동작한다:
+1. **Kakao Developers Console 앱 등록** (REST API Key, Client Secret 발급)
+2. **Redirect URI 등록** — 개발 `http://localhost:3000/api/auth/kakao/callback`, 운영 `https://<prod-domain>/api/auth/kakao/callback`
+3. **이메일 동의 항목(`account_email`) 필수 동의 설정** — 자동 계정 연결의 기준이므로 누락 시 가입 불가
+4. **환경 변수 3종 설정** — `KAKAO_REST_API_KEY`, `KAKAO_CLIENT_SECRET`, `KAKAO_REDIRECT_URI` (누락 시 fail-fast로 서버 기동 안 함)
+5. **DB 마이그레이션 적용** — `npm run db:migrate` (migration 011, `users(provider, provider_id)` 부분 유니크 인덱스)
+
+상세 운영 절차는 `README.md` "카카오 소셜 로그인 설정 (운영자)" 섹션 참조.

@@ -18,7 +18,7 @@ import { NOTICES, type Screen } from './demo-data';
  * @MX:REASON: 이 컴포넌트를 통해 데스크탑 전체 플로우가 제어되며, 변경 시 모든 화면에 영향.
  */
 export default function DesktopApp() {
-  const { state, login, signup, verifyUnit, logout } = useAuth();
+  const { state, login, signup, verifyUnit, logout, kakaoLogin } = useAuth();
 
   // State
   const [screen, setScreen] = useState<Screen>('login');
@@ -503,6 +503,49 @@ export default function DesktopApp() {
                         animation: 'spin 1s linear infinite'
                       }} />
                     ) : '로그인'}
+                  </button>
+
+                  {/* REQ-KAKAO-015: 카카오 소셜 로그인 진입 — 항상 활성화 */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    margin: '16px 0 14px'
+                  }}>
+                    <div style={{ flex: 1, height: '1px', backgroundColor: '#F3F4F6' }}></div>
+                    <span style={{
+                      fontSize: '11px',
+                      color: '#D1D5DB',
+                      fontWeight: 600,
+                      letterSpacing: '0.6px',
+                      textTransform: 'uppercase'
+                    }}>소셜 로그인</span>
+                    <div style={{ flex: 1, height: '1px', backgroundColor: '#F3F4F6' }}></div>
+                  </div>
+                  <button
+                    onClick={kakaoLogin}
+                    style={{
+                      width: '100%',
+                      height: '52px',
+                      backgroundColor: '#FEE500',
+                      color: 'rgba(0,0,0,0.85)',
+                      border: 'none',
+                      borderRadius: '12px',
+                      fontSize: '15px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '9px',
+                      marginBottom: '16px',
+                      letterSpacing: '-0.3px'
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="rgba(0,0,0,0.85)">
+                      <path d="M12 3C6.48 3 2 6.92 2 11.75c0 2.99 1.71 5.63 4.31 7.27L5.2 22.38a.5.5 0 0 0 .74.55l4.38-2.94c.55.07 1.1.11 1.68.11 5.52 0 10-3.92 10-8.75C22 6.92 17.52 3 12 3z"></path>
+                    </svg>
+                    카카오로 시작하기
                   </button>
 
                   <div style={{

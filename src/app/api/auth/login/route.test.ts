@@ -298,4 +298,66 @@ describe('POST /api/auth/login — 로그인', () => {
     );
     expect(row.rows[0].n).toBe(0);
   });
+
+  // --- SPEC-AUTH-KAKAO-001 회귀 테스트 (REQ-KAKAO-017 silent lockout 방지) ---
+
+  /**
+   * AC-KAKAO-018: 자동 연결(auto-link) 후에도 이메일/비밀번호 로그인이 보존된다.
+   *
+   * 시나리오: 카카오 로그인 자동 연결(upsertKakaoAccount)이 password_hash 를 유지한 채
+   * provider 를 'kakao' 로 갱신했을 때, 사용자가 기존 이메일/비밀번호로 로그인하면
+   * 여전히 200 이 발급되어야 한다. provider='kakao' 만으로 이메일 로그인이 차단되면
+   * "silent lockout" 결함(REQ-KAKAO-017)이 발생한다.
+   *
+   * seedUser 가 provider='email' 만 시드하므로, 카카오 연결 상태를 직접 INSERT 한다.
+   */
+  it('AC-KAKAO-018: provider=kakao + password_hash 보존 시 이메일/비밀번호 로그인 성공 → 200 (silent lockout 방지)', async () => {
+    const email = 'kakao-linked@example.com';
+    const passwordHash = hashPassword(PASSWORD);
+    await query(
+      `INSERT INTO users (email, password_hash, role_id, provider, provider_id, status, verified_at, unit_id, managed_building_id)
+       VALUES (
+         $1, $2,
+         (SELECT id FROM roles WHERE code = 'RESIDENT'),
+         'kakao', '12345',
+         'ACTIVE', now(),
+         NULL, NULL
+       )`,
+      [email, passwordHash],
+    );
+
+    const res = await postLogin({ email, password: PASSWORD });
+    expect(res.status).toBe(200);
+    const body = await readBody(res);
+    expect(body.success).toBe(true);
+    expect(body.data?.user.email).toBe(email);
+    expect(body.data?.user.verified).toBe(true);
+  });
+
+  /**
+   * AC-KAKAO-020: 카카오 신규 가입자(password_hash=NULL)는 이메일/비밀번호 로그인이 거부된다.
+   *
+   * 시나리오: 카카오 최초 로그인으로 생성된 계정은 password_hash 가 NULL 이다(REQ-KAKAO-008).
+   * 공격자가 해당 이메일을 알아도 비밀번호 무차별 대입으로 로그인할 수 없어야 한다.
+   * route.ts L88 의 `!user.password_hash` 단락 평가가 이를 방어한다.
+   */
+  it('AC-KAKAO-020: provider=kakao + password_hash=NULL 시 이메일/비밀번호 로그인 거부 → 401', async () => {
+    const email = 'social-only@example.com';
+    await query(
+      `INSERT INTO users (email, password_hash, role_id, provider, provider_id, status, verified_at, unit_id, managed_building_id)
+       VALUES (
+         $1, NULL,
+         (SELECT id FROM roles WHERE code = 'RESIDENT'),
+         'kakao', '67890',
+         'ACTIVE', now(),
+         NULL, NULL
+       )`,
+      [email],
+    );
+
+    const res = await postLogin({ email, password: PASSWORD });
+    expect(res.status).toBe(401);
+    const body = await readBody(res);
+    expect(body.error?.message).toBe('이메일 또는 비밀번호가 올바르지 않습니다');
+  });
 });

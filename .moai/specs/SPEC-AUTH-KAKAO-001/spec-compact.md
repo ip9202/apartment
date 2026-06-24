@@ -2,7 +2,7 @@
 spec_id: "SPEC-AUTH-KAKAO-001"
 title: "카카오 OAuth 2.0 소셜 로그인 (Compact)"
 version: "1.1.0"
-status: "Planned"
+status: "Completed"
 created: "2026-06-24"
 updated: "2026-06-24"
 author: "강력쇠주먹"

@@ -20,7 +20,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { query } from '../../../lib/db';
 import { validationError } from '../../../lib/rbac';
-import { requireAuthenticated, suggestForbidden } from '../../../lib/suggest-rbac';
+import { requireAuthenticated, suggestForbidden, buildVisibilityCondition } from '../../../lib/suggest-rbac';
 
 /** UUID v4 정규식 (zod 4 deprecated z.string().uuid() 대체). */
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -51,37 +51,7 @@ const listQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).default(20),
 });
 
-/** 역할별 비공개 건의 접근 권한 — RESIDENT/AUDITOR 본인, REP 담당동, CHAIR/ADMIN 전체. */
-function buildVisibilityCondition(
-  callerRole: string,
-  callerId: string,
-  managedBuildingId: string | null,
-): { clause: string; params: string[] } {
-  // CHAIR/ADMIN: 전체 (조건 없음)
-  if (callerRole === 'CHAIR' || callerRole === 'ADMIN') {
-    return { clause: '', params: [] };
-  }
-  // REP: 공개 OR 본인 OR (비공개 ∧ 담당동 호수)
-  if (callerRole === 'REP') {
-    if (managedBuildingId) {
-      return {
-        clause:
-          '(s.is_public = true OR s.author_id = $1 OR (s.is_public = false AND u.building_id = $2))',
-        params: [callerId, managedBuildingId],
-      };
-    }
-    // 담당동 없는 REP 는 RESIDENT 와 동일 (본인 + 공개)
-    return {
-      clause: '(s.is_public = true OR s.author_id = $1)',
-      params: [callerId],
-    };
-  }
-  // RESIDENT/AUDITOR (기본): 공개 OR 본인
-  return {
-    clause: '(s.is_public = true OR s.author_id = $1)',
-    params: [callerId],
-  };
-}
+/** 역할별 비공개 건의 접근 권한 — suggest-rbac.ts buildVisibilityCondition 로 이전 (T-002). */
 
 /**
  * GET /api/suggestions — 인증 사용자 건의 목록 (REQ-SUGGEST-018~022, 역할별 분기).

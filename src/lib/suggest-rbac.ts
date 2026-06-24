@@ -97,3 +97,74 @@ export function suggestForbidden(message: string): Response {
     { status: 403 },
   );
 }
+
+/**
+ * 비공개 건의 접근 권한 검사 — RESIDENT/AUDITOR 본인, REP 담당동, CHAIR/ADMIN 전체.
+ *
+ * SPEC-ATTACHMENT-001 T-002: suggestions/[id]/route.ts 에서 추출. ATTACHMENT 다운로드
+ * 엔드포인트(GET /api/attachments/[id]) 가 SUGGEST 첨부의 비공개 가시성을 동일 계약으로
+ * 재검증(REQ-ATT-013) 하기 위해 공유 헬퍼로 이전.
+ *
+ * @returns true 허용 / false 거부
+ *
+ * @MX:ANCHOR: [AUTO] 비공개 건의 접근 권한 불변 계약 — fan_in=2 (suggestions/[id], attachments/[id])
+ * @MX:REASON:  RESIDENT/AUDITOR 본인, REP 담당동, CHAIR/ADMIN 전체 분기 로직이 두 곳에 중복되면
+ *             한 곳 누락 시 권한 우회로 이어짐 (REQ-ATT-013 존재 누출 방지 403 계약).
+ */
+export function canAccessPrivate(
+  callerRole: string,
+  callerId: string,
+  authorId: string | null,
+  managedBuildingId: string | null,
+  suggestionBuildingId: string | null,
+): boolean {
+  // CHAIR/ADMIN: 전체
+  if (callerRole === 'CHAIR' || callerRole === 'ADMIN') return true;
+  // 작성자 본인 (아카이브로 author_id NULL 이면 본인 아님)
+  if (authorId !== null && authorId === callerId) return true;
+  // REP: 담당동
+  if (callerRole === 'REP' && managedBuildingId && suggestionBuildingId) {
+    return managedBuildingId === suggestionBuildingId;
+  }
+  return false;
+}
+
+/**
+ * 역할별 비공개 건의 목록 가시성 조건 빌더 — RESIDENT/AUDITOR 본인+공개, REP 담당동+공개,
+ * CHAIR/ADMIN 전체.
+ *
+ * SPEC-ATTACHMENT-001 T-002: suggestions/route.ts 에서 추출. 공유 가시성 로직 단일 진실 원천.
+ *
+ * @MX:NOTE: [AUTO] 반환 clause 의 placeholder($1, $2) 는 호출자가 paramIdx 기반 재작성 필요
+ *           (suggestions/route.ts GET 참조). clause 가 빈 문자열이면 조건 없음(CHAIR/ADMIN).
+ */
+export function buildVisibilityCondition(
+  callerRole: string,
+  callerId: string,
+  managedBuildingId: string | null,
+): { clause: string; params: string[] } {
+  // CHAIR/ADMIN: 전체 (조건 없음)
+  if (callerRole === 'CHAIR' || callerRole === 'ADMIN') {
+    return { clause: '', params: [] };
+  }
+  // REP: 공개 OR 본인 OR (비공개 ∧ 담당동 호수)
+  if (callerRole === 'REP') {
+    if (managedBuildingId) {
+      return {
+        clause:
+          '(s.is_public = true OR s.author_id = $1 OR (s.is_public = false AND u.building_id = $2))',
+        params: [callerId, managedBuildingId],
+      };
+    }
+    // 담당동 없는 REP 는 RESIDENT 와 동일 (본인 + 공개)
+    return {
+      clause: '(s.is_public = true OR s.author_id = $1)',
+      params: [callerId],
+    };
+  }
+  // RESIDENT/AUDITOR (기본): 공개 OR 본인
+  return {
+    clause: '(s.is_public = true OR s.author_id = $1)',
+    params: [callerId],
+  };
+}

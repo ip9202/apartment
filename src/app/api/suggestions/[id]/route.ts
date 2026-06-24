@@ -20,7 +20,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { query } from '../../../../lib/db';
 import { badRequest, notFound, forbidden, conflict, validationError } from '../../../../lib/rbac';
-import { requireAuthenticated, suggestForbidden } from '../../../../lib/suggest-rbac';
+import { requireAuthenticated, suggestForbidden, canAccessPrivate } from '../../../../lib/suggest-rbac';
 
 /** UUID v4 정규식 (zod 4 deprecated z.string().uuid() 대체). */
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -28,28 +28,6 @@ const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12
 /** Next.js 15 동적 라우트 params 타입 (Promise). */
 interface SuggestionParams {
   params: Promise<{ id: string }>;
-}
-
-/**
- * 비공개 건의 접근 권한 검사 — RESIDENT/AUDITOR 본인, REP 담당동, CHAIR/ADMIN 전체.
- * @returns true 허용 / false 거부
- */
-function canAccessPrivate(
-  callerRole: string,
-  callerId: string,
-  authorId: string | null,
-  managedBuildingId: string | null,
-  suggestionBuildingId: string | null,
-): boolean {
-  // CHAIR/ADMIN: 전체
-  if (callerRole === 'CHAIR' || callerRole === 'ADMIN') return true;
-  // 작성자 본인 (아카이브로 author_id NULL 이면 본인 아님)
-  if (authorId !== null && authorId === callerId) return true;
-  // REP: 담당동
-  if (callerRole === 'REP' && managedBuildingId && suggestionBuildingId) {
-    return managedBuildingId === suggestionBuildingId;
-  }
-  return false;
 }
 
 /**

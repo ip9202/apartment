@@ -18,7 +18,7 @@ import { NOTICES, SUGGESTIONS, getTimelineColors, getTabStyles, getCatTabStyles,
  * @MX:REASON: 이 컴포넌트를 통해 태블릿 전체 플로우가 제어되며, 변경 시 모든 화면에 영향.
  */
 export default function TabletApp() {
-  const { state, login, signup, verifyUnit, logout } = useAuth();
+  const { state, login, signup, verifyUnit, logout, kakaoLogin } = useAuth();
 
   // State
   const [screen, setScreen] = useState<Screen>('login');
@@ -474,7 +474,7 @@ export default function TabletApp() {
                     <div style={{ flex: 1, height: "1px", backgroundColor: "#F3F4F6" }}></div>
                   </div>
                   <button
-                    onClick={() => doLogin('kakao@user.com', 'kakao')}
+                    onClick={kakaoLogin}
                     style={{
                       width: "100%",
                       height: "52px",

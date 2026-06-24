@@ -59,6 +59,8 @@ interface AuthContextType {
   ) => Promise<void>;
   verifyUnit: (buildingId: string, unitNumber: string) => Promise<void>;
   refresh: () => Promise<void>;
+  // REQ-KAKAO-014: 카카오 OAuth 진입 액션 — SPA 외부로 전체 페이지 이동.
+  kakaoLogin: () => void;
 }
 
 /**
@@ -71,7 +73,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
  *
  * 제공 기능:
  * - 인증 상태: user, loading, error
- * - 액션: login, logout, signup, verifyUnit, refresh
+ * - 액션: login, logout, signup, verifyUnit, refresh, kakaoLogin
  * - 자동 세션 복원: 마운트 시 /api/auth/me 호출
  *
  * @example
@@ -268,6 +270,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     refreshAction();
   }, [refreshAction]);
 
+  /**
+   * 카카오 OAuth 로그인 진입 (REQ-KAKAO-014).
+   *
+   * OAuth 는 SPA 외부에서 진행되어야 하므로 전체 페이지 네비게이션을 트리거.
+   * 백엔드 GET /api/auth/kakao 가 state 쿠키 + 302 리다이렉트를 처리.
+   * 버튼은 항상 활성화 (REQ-KAKAO-015) — 비활성/준비 중 상태 없음.
+   *
+   * @MX:ANCHOR: [AUTO] 모든 뷰포트 컴포넌트(Mobile/Tablet/Desktop) 의 카카오 진입점 — fan_in >= 3
+   * @MX:REASON: 세 컴포넌트가 동일 액션을 공유해야 UX 일관성이 유지됨.
+   */
+  const kakaoLoginAction = useCallback(() => {
+    window.location.href = '/api/auth/kakao';
+  }, []);
+
   const contextValue: AuthContextType = {
     state,
     login: loginAction,
@@ -275,6 +291,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signup: signupAction,
     verifyUnit: verifyUnitAction,
     refresh: refreshAction,
+    kakaoLogin: kakaoLoginAction,
   };
 
   return createElement(AuthContext.Provider, { value: contextValue }, children);

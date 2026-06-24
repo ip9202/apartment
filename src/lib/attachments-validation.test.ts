@@ -13,8 +13,10 @@ import { describe, it, expect } from 'vitest';
 import {
   MAX_SIZE_BYTES,
   MAX_PER_POST,
+  MAX_FILENAME_LENGTH,
   validateAttachment,
   isAllowedExtension,
+  sanitizeFilename,
 } from './attachments-validation';
 
 // 헬퍼: 매직 바이트 시그니처로 Buffer 생성
@@ -225,5 +227,62 @@ describe('isAllowedExtension (REQ-ATT-005)', () => {
     expect(isAllowedExtension('a.docx')).toBe(true);
     expect(isAllowedExtension('a.txt')).toBe(false);
     expect(isAllowedExtension('a.exe')).toBe(false);
+  });
+});
+
+describe('sanitizeFilename — Content-Disposition 주입 방어 (W1, REQ-ATT-029)', () => {
+  it('큰따옴표/백슬래시/CR/LF 제거, 나머지 보존', () => {
+    // `a"b\r\nc\\d.png` → a, b, c, d, .png 만 남고 제어문자와 ", \ 는 제거
+    const dirty = 'a"b\r\nc\\d.png';
+    expect(sanitizeFilename(dirty)).toBe('abcd.png');
+  });
+
+  it('제어문자(C0 0x00-0x1F) + DEL(0x7F) 전체 제거', () => {
+    const dirty = 'x\x00\x01\x07\x1F\x7Fy.png';
+    expect(sanitizeFilename(dirty)).toBe('xy.png');
+  });
+
+  it('이미 깨끗한 파일명은 그대로 통과', () => {
+    expect(sanitizeFilename('clean-file_name (1).pdf')).toBe('clean-file_name (1).pdf');
+  });
+
+  it('양끝 공백 trim', () => {
+    expect(sanitizeFilename('  pic.png  ')).toBe('pic.png');
+  });
+});
+
+describe('MAX_FILENAME_LENGTH — 파일명 길이 상한 (W2, REQ-ATT-029)', () => {
+  it('MAX_FILENAME_LENGTH = 255', () => {
+    expect(MAX_FILENAME_LENGTH).toBe(255);
+  });
+
+  it('파일명 256자 (255 초과) → 422', () => {
+    // 256자 파일명: 252자 스템 + '.png' (유효 확장자 + 유효 PNG 시그니처)
+    const longName = `${'a'.repeat(252)}.png`;
+    expect(longName.length).toBe(256);
+    const r = validateAttachment({
+      declaredMime: 'image/png',
+      filename: longName,
+      size: 100,
+      buffer: buf('89504E47'),
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.status).toBe(422);
+      expect(r.message).toContain('255');
+    }
+  });
+
+  it('파일명 정확히 255자 → 통과 (경계)', () => {
+    // 255자 파일명: 251자 스템 + '.png'
+    const edgeName = `${'a'.repeat(251)}.png`;
+    expect(edgeName.length).toBe(255);
+    const r = validateAttachment({
+      declaredMime: 'image/png',
+      filename: edgeName,
+      size: 100,
+      buffer: buf('89504E47'),
+    });
+    expect(r.ok).toBe(true);
   });
 });

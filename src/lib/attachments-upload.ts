@@ -12,7 +12,7 @@ import { NextResponse } from 'next/server';
 import { createHash } from 'node:crypto';
 import { query } from './db';
 import { validationError } from './rbac';
-import { validateAttachment, MAX_SIZE_BYTES, MAX_PER_POST } from './attachments-validation';
+import { validateAttachment, MAX_SIZE_BYTES, MAX_PER_POST, sanitizeFilename } from './attachments-validation';
 import { saveAttachmentBinary } from './attachments-storage';
 
 export type AttachmentTarget = 'NOTICE' | 'SUGGEST';
@@ -86,7 +86,7 @@ export async function uploadAttachment(
     `INSERT INTO attachments (target_type, target_id, uploader_id, original_filename, mime_type, size_bytes, storage_path, sha256)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING id, original_filename, mime_type, size_bytes, created_at`,
-    [target_type, target_id, uploader_id, filename, declaredMime, f.size, saved.storagePath, sha256],
+    [target_type, target_id, uploader_id, sanitizeFilename(filename), declaredMime, f.size, saved.storagePath, sha256],
   );
   const row = ins.rows[0];
 

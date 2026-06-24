@@ -22,6 +22,18 @@ export const MAX_SIZE_BYTES = 10485760;
 /** 게시물당 최대 첨부 수 (REQ-ATT-024). */
 export const MAX_PER_POST = 5;
 
+/** 원본 파일명 최대 길이 — DB VARCHAR(255) 대응 (REQ-ATT-029). 초과 시 422 (W2). */
+export const MAX_FILENAME_LENGTH = 255;
+
+/**
+ * 원본 파일명 새니타이제이션 — Content-Disposition 헤더 주입 방어 (W1).
+ * 제어문자(C0 0x00-0x1F) + DEL(0x7F) + 큰따옴표 + 백슬래시 제거.
+ * 디스크 경로가 아닌 메타데이터 저장/다운로드 헤더용 정제 (디스크 파일명은 별도 UUID).
+ */
+export function sanitizeFilename(name: string): string {
+  return name.replace(/[\x00-\x1F\x7F"\\]/g, '').trim();
+}
+
 /** 확장자 → 허용 MIME 맵. 대소문자 무관 비교를 위해 lowercase 키. */
 const EXT_TO_MIMES: Record<string, string[]> = {
   png: ['image/png'],
@@ -80,6 +92,11 @@ export function validateAttachment(input: ValidateInput): ValidateResult {
   }
   if (size > MAX_SIZE_BYTES) {
     return { ok: false, status: 422, message: `파일 크기가 ${MAX_SIZE_BYTES} 바이트를 초과합니다` };
+  }
+
+  // 1b. 파일명 길이 (W2 — DB VARCHAR(255) 대응, REQ-ATT-029). 초과 시 500 방지.
+  if (filename.length > MAX_FILENAME_LENGTH) {
+    return { ok: false, status: 422, message: `파일명이 ${MAX_FILENAME_LENGTH}자를 초과합니다` };
   }
 
   // 2. 확장자 (REQ-ATT-005)

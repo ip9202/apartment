@@ -16,7 +16,7 @@ import {
   readMigration,
 } from '../../../../../lib/migration-test-helpers';
 import { hashPassword, signAccessToken } from '../../../../../lib/auth';
-import { existsSync, rmSync, mkdtempSync } from 'node:fs';
+import { rmSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 

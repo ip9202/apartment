@@ -237,4 +237,23 @@ describe('POST /api/notices/[id]/attachments — ADMIN 공지 첨부 업로드 (
     const res = await postAttachment('not-a-uuid', { filename: 'pic.png', mimeType: 'image/png', buffer: pngBuffer() }, at);
     expect(res.status).toBe(400);
   });
+
+  it('빈 FormData (file 필드 누락) → 422 "file 필드가 필요합니다"', async () => {
+    const { id: noticeId } = await seedNotice();
+    const admin = await seedUser('att-empty@example.com', { role: 'ADMIN' });
+    const at = signAccessToken({ sub: admin.id, role: 'ADMIN', verified: true });
+    // file 필드 없는 multipart
+    const fd = new FormData();
+    const req = new Request(`${BASE_URL}/${noticeId}/attachments`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${at}` },
+      body: fd,
+    });
+    const mod = await import('./route');
+    const res = await mod.POST(req, { params: Promise.resolve({ id: noticeId }) });
+    expect(res.status).toBe(422);
+    const body = (await res.json()) as { error?: { message?: string }; message?: string };
+    const msg = body.error?.message ?? body.message ?? '';
+    expect(msg).toContain('file 필드가 필요합니다');
+  });
 });

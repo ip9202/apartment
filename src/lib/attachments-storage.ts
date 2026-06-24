@@ -15,7 +15,7 @@
 
 import { createWriteStream, createReadStream, mkdirSync, existsSync, statSync, unlinkSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
-import { resolve, join, isAbsolute, relative } from 'node:path';
+import { resolve, isAbsolute, relative } from 'node:path';
 import { Readable } from 'node:stream';
 
 /** 기본 저장소 루트 (ATTACHMENTS_DIR 미설정 시). */

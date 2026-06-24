@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- 카카오 OAuth 2.0 소셜 로그인 (SPEC-AUTH-KAKAO-001)
+  - `GET /api/auth/kakao` 엔드포인트: 카카오 로그인 시작 (state 쿠키 발급 + 카카오 인증 화면 302 리다이렉트)
+  - `GET /api/auth/kakao/callback` 엔드포인트: 카카오 로그인 콜백 (state CSRF 검증 → 토큰 교환 → 사용자 정보 조회 → upsert → AT/RT 쿠키 발급 → 리다이렉트)
+  - 이메일 기반 자동 계정 연결: 카카오 이메일이 기존 `users.email`과 일치하면 해당 계정에 카카오 수단 연결, 미존재 시 신규 RESIDENT 가입 (`password_hash=NULL`)
+  - migration 011: `users(provider, provider_id)` 부분 유니크 인덱스 (`WHERE provider_id IS NOT NULL`)
+  - state CSRF 방어: `crypto.randomUUID` 생성, httpOnly·SameSite=Lax·Max-Age=600s 쿠키 저장, 콜백 완료 시 일회용 폐기
+  - 카카오 토큰 정책: 1회성 교환 후 메모리에서만 사용, DB/쿠키에 영구 저장하지 않음
+  - 계정 탈취 방어: 기존 카카오 계정과 다른 id 충돌 시 409 거부, 최초 연결 시 기존 이메일 계정에 알림 발송, 자동 연결 후에도 기존 이메일/비밀번호 로그인 보존 (silent lockout 방지)
+  - 3뷰포트 카카오 버튼: `TabletApp.tsx` stub 교체, `MobileApp.tsx`·`DesktopApp.tsx` 신규 추가 (항상 활성화)
 - 비밀번호 재설정 기능 (SPEC-AUTH-RESET-001)
   - `POST /api/auth/password/reset/request` 엔드포인트: 비밀번호 재설정 요청 (이메일 발송)
   - `POST /api/auth/password/reset/confirm` 엔드포인트: 비밀번호 재설정 확인 (토큰 검증 + 변경)
@@ -26,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - cascade 삭제: NOTICE 영구 삭제 / SUGGEST 아카이브 / AUTH 강제 탈퇴 시 첨부 정리
 
 ### Security
+- 카카오 OAuth state CSRF 방어 (crypto.randomUUID + httpOnly 쿠키, 일회용 폐기)
+- 카카오 Client Secret 환경 변수 전용 관리 (`.env.local`, 버전 관리 제외)
+- 카카오 액세스/리프레시 토큰 영구 저장 금지 (1회성 교환 후 폐기)
+- 이메일 정규화(소문자) 기반 계정 탈취 완화 (대소문자 혼용 우회 차단)
 - OWASP Top 10 준수 (A01: Injection, A02: Broken Auth, A03: Crypto, A07: Identification, A09: Logging)
 - crypto.randomBytes(32) CSPRNG 토큰 생성
 - 파라미터화 쿼리 (SQL Injection 방지)
@@ -33,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 첨부파일 경로 순회 방어 (UUID 기반 storage_path, 파일명 새니타이제이션)
 - 첨부 MIME 스푸핑 방어 (매직 바이트 시그니처 교차 검증)
 - 첨부 다운로드 권한 재검증 (직접 링크 공격 방지)
+
+### Security (카카오 OAuth 설계 결정)
+- PKCE 미도입: confidential client 기반 client-secret + state CSRF + httpOnly 600s 쿠키 조합으로 충분한 것으로 판단하여, Authorization Code Flow에 PKCE는 적용하지 않음 (근거: SPEC-AUTH-KAKAO-001 §6.1)
 
 ### Security
 - OWASP Top 10 준수 (A01: Injection, A02: Broken Auth, A03: Crypto, A07: Identification, A09: Logging)

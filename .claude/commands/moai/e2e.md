@@ -1,6 +1,6 @@
 ---
-description: Chrome, Playwright 또는 Agent Browser로 E2E 테스트 생성 및 실행
-argument-hint: "[--record] [--url URL] [--journey NAME]"
+description: Create and run E2E tests across web, mobile, and desktop with auto-detection and CLI-first toolchains
+argument-hint: "[--tool TOOL] [--platform web|mobile|desktop|desktop-native] [--record] [--journey NAME] [--autofix]"
 allowed-tools: Skill
 ---
 

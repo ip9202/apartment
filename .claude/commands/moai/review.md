@@ -1,6 +1,6 @@
 ---
-description: 보안 및 @MX 태그 준수 확인을 포함한 코드 리뷰
-argument-hint: "[--staged] [--branch] [--security]"
+description: Code review with security and @MX tag compliance check
+argument-hint: "[--staged] [--branch] [--security] [--deep] [--patch] [--commit <SHA>]"
 allowed-tools: Skill
 ---
 
